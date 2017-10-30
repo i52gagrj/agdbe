@@ -1,0 +1,4 @@
+modelo_new:
+    path: /new
+    defaults: { _controller: "AppBundle:Modelo:new" }
+    methods: POST

@@ -1,0 +1,9 @@
+mensaje_new:
+    path: /new
+    defaults: { _controller: "AppBundle:Mensaje:new" }
+    methods: POST
+
+mensaje_todo:
+    path: /todo
+    defaults: { _controller: "AppBundle:Mensaje:todo" }
+    methods: POST    

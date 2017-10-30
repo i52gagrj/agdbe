@@ -1,0 +1,27 @@
+app_default:
+    resource: "@AppBundle/Resources/config/routing/default.yml"      
+    prefix: /
+
+app_usuario:
+    resource: "@AppBundle/Resources/config/routing/usuario.yml"
+    prefix: /usuario.
+
+app_modelo:
+    resource: "@AppBundle/Resources/config/routing/modelo.yml"
+    prefix: /modelo    
+
+app_documento:
+    resource: "@AppBundle/Resources/config/routing/documento.yml"
+    prefix: /documento
+
+app_sesion:
+    resource: "@AppBundle/Resources/config/routing/sesion.yml"
+    prefix: /sesion
+
+app_descarga:
+    resource: "@AppBundle/Resources/config/routing/descarga.yml"
+    prefix: /descarga
+
+app_mensaje:
+    resource: "@AppBundle/Resources/config/routing/mensaje.yml"
+    prefix: /mensaje

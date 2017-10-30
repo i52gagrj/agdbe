@@ -1,0 +1,4 @@
+documento_new:
+    path: /new
+    defaults: { _controller: "AppBundle:Documento:new" }
+    methods: POST

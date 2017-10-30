@@ -1,0 +1,4 @@
+sesion_new:
+    path: /new
+    defaults: { _controller: "AppBundle:Sesion:new" }
+    methods: POST
