@@ -4,7 +4,7 @@ app_default:
 
 app_usuario:
     resource: "@AppBundle/Resources/config/routing/usuario.yml"
-    prefix: /usuario.
+    prefix: /usuario
 
 app_modelo:
     resource: "@AppBundle/Resources/config/routing/modelo.yml"

@@ -7,7 +7,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Validator\Constraints as Assert;
-use ModelBundle\Entity\Usuario;
+use ModelBundle\Entity\Mensaje;
 use AppBundle\Services\Helpers;
 use AppBundle\Services\JwtAuth;
 

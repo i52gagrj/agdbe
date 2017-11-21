@@ -2,3 +2,13 @@ documento_new:
     path: /new
     defaults: { _controller: "AppBundle:Documento:new" }
     methods: POST
+
+documento_listall:
+    path: /listall
+    defaults: { _controller: "AppBundle:Documento:listall" }
+    methods: POST    
+
+documento_returnone:
+    path: /returnone
+    defaults: { _controller: "AppBundle:Documento:returnone" }
+    methods: POST    

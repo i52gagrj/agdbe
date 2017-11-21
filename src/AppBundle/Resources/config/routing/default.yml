@@ -12,3 +12,8 @@ default_login:
     path: /login 
     defaults: { _controller: "AppBundle:Default:login" }
     methods: POST
+
+default_returnidentity:
+    path: /returnidentity 
+    defaults: { _controller: "AppBundle:Default:returnidentity" }
+    methods: POST    

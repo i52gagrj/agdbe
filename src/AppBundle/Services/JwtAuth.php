@@ -2,6 +2,7 @@
 namespace AppBundle\Services;
 
 use Firebase\JWT\JWT;
+use ModelBundle\Entity\Sesion;
 
 class JwtAuth 
 {
@@ -24,18 +25,36 @@ class JwtAuth
 		$signup = false;
 
 		if(is_object($user)) $signup = true;
-		/*Iniciar sesión. Devolver en el token el id de la sesion*/
+		//Iniciar sesión. Devolver en el token el id de la sesion
 		
 
 		if($signup)
 		{
+			//Generar sesion 
+			$sesionid=0;
+
+			if($getHash == null){
+				$sesion = new Sesion;
+
+				$sesion->setInicio(new \Datetime("now"));
+				$sesion->setFin(new \Datetime("+15 minutes"));
+
+				$this->manager->persist($sesion);	
+				$this->manager->flush();
+
+				$sesionid = $sesion->getId();
+			}
+
+
 			//GENERAR TOKEN JWT
+
 			$token = array(
 				"sub" => $user->getId(),
 				"email" => $user->getEmail(),
-				"nombre" => $user->getNombre(),				
+				"nombre" => $user->getNombre(),
+				"idsesion" => $sesionid,
 				"iat" => time(),
-				"exp" => time() + (24*60*60)
+				"exp" => time() + (900)
 			);	
 
 			$jwt = JWT::encode($token, $this->key, 'HS256');
@@ -64,7 +83,7 @@ class JwtAuth
 	}
 
 
-    public function checkToken($jwt, $getIdentity = false)
+    public function checkToken($jwt)
     {
     	$auth = false;
         try{
@@ -76,16 +95,49 @@ class JwtAuth
         }
 
         if(isset($decoded) && is_object($decoded) && isset($decoded->sub)){
-        	$auth = true;
-        }else{
+        	//Modificar sesión para añadirle quince minutos más al tiempo
+
+        	//Generar un nuevo jwt con otros quince minutos más
+        	
+        	$token = array(
+				"sub" => $decoded->sub,
+				"email" => $decoded->email,
+				"nombre" => $decoded->nombre,
+				"idsesion" => $decoded->idsesion,
+				"iat" => time(),
+				"exp" => time() + (900)
+			);	
+			$auth = JWT::encode($token, $this->key, 'HS256');
+        }
+        else
+        {
         	$auth = false;
         }
 
-        if($getIdentity == false) {
-        	return $auth;
-        }else {
-        	return $decoded;
+       	return $auth;
+    }	
+
+    public function decodeToken($jwt)
+    {
+        $answer = array(
+			"status" => "Error",
+			"code" => 400,
+			"message" => "Error in Token"
+		);	    	 
+    	try{
+            $decoded = JWT::decode($jwt, $this->key, array('HS256'));
+            $auth = true;
+        }catch(\UnexpectedValueException $e){
+        	$auth = false;	
+        }catch(\DomainException $e){
+        	$auth = false;	
         }
+        if($auth){ 
+        	return $decoded;
+        }	
+        else {
+        	return $answer;        
+        }	
     }	
 
     /*
