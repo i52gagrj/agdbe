@@ -15,7 +15,7 @@ class JwtAuth
 		$this->key='estaeslaclavesecreta19710622';
 	}
 
-	public function signup($email, $password, $getHash = null)
+	public function signup($email, $password)
 	{
 		$user = $this->manager->getRepository('ModelBundle:Usuario')->findOneBy(array(
 			"email" => $email,
@@ -58,18 +58,7 @@ class JwtAuth
 			);	
 
 			$jwt = JWT::encode($token, $this->key, 'HS256');
-
-			$decoded = JWT::decode($jwt, $this->key, array('HS256'));
-
-			if($getHash == null)
-			{
-				$data = $jwt;
-			}
-			else
-			{
-				$data = $decoded;
-			}
-			
+			$data = $jwt;			
 		}
 		else 
 		{
@@ -96,6 +85,9 @@ class JwtAuth
 
         if(isset($decoded) && is_object($decoded) && isset($decoded->sub)){
         	//Modificar sesión para añadirle quince minutos más al tiempo
+        	//Recuperar sesion desde $decoded->idsesion
+        	//Modificar end para añadirle el tiempo actual +quince minutos
+        	//Guardar la sesion modificada
 
         	//Generar un nuevo jwt con otros quince minutos más
         	
@@ -148,3 +140,4 @@ class JwtAuth
 	}
 	*/
 }
+
