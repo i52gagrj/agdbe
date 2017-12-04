@@ -154,4 +154,16 @@ class UsuarioController extends Controller {
         return $helpers->json($data);
     }
 
+    /*
+    public function returnallclientsAction(Request $request) 
+    {
+        
+    }
+
+    public function returnoneclientAction(Request $request) 
+    {
+        
+    }    
+    */
+
 }

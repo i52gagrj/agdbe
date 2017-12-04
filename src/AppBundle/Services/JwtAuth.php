@@ -33,18 +33,14 @@ class JwtAuth
 			//Generar sesion 
 			$sesionid=0;
 
-			if($getHash == null){
-				$sesion = new Sesion;
+			$sesion = new Sesion;
+			$sesion->setInicio(new \Datetime("now"));
+			$sesion->setFin(new \Datetime("+15 minutes"));
 
-				$sesion->setInicio(new \Datetime("now"));
-				$sesion->setFin(new \Datetime("+15 minutes"));
+			$this->manager->persist($sesion);	
+			$this->manager->flush();
 
-				$this->manager->persist($sesion);	
-				$this->manager->flush();
-
-				$sesionid = $sesion->getId();
-			}
-
+			$sesionid = $sesion->getId();
 
 			//GENERAR TOKEN JWT
 
@@ -84,11 +80,6 @@ class JwtAuth
         }
 
         if(isset($decoded) && is_object($decoded) && isset($decoded->sub)){
-        	//Modificar sesión para añadirle quince minutos más al tiempo
-        	//Recuperar sesion desde $decoded->idsesion
-        	//Modificar end para añadirle el tiempo actual +quince minutos
-        	//Guardar la sesion modificada
-
         	//Generar un nuevo jwt con otros quince minutos más
         	
         	$token = array(
@@ -100,9 +91,21 @@ class JwtAuth
 				"exp" => time() + (900)
 			);	
 			$auth = JWT::encode($token, $this->key, 'HS256');
+
+        	//Modificar sesión para añadirle quince minutos más al tiempo
+        	//Recuperar sesion desde $decoded->idsesion
+        	//Modificar end para añadirle el tiempo actual +quince minutos
+        	//Guardar la sesion modificada
+			$em = $this->manager;
+			$sesion = $em->getRepository('ModelBundle:Sesion')->find($decoded->idsesion);
+			$sesion->setFin(new \Datetime("+15 minutes"));
+            $em->persist($sesion);
+            $em->flush();
+
         }
         else
         {
+        	//Si no es valido el token
         	$auth = false;
         }
 
