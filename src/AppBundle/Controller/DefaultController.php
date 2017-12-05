@@ -33,7 +33,7 @@ class DefaultController extends Controller
             $params = json_decode($json);
             $email = (isset($params->email)) ? $params->email : null;
             $password = (isset($params->password)) ? $params->password : null;
-            //$getHash = (isset($params->getHash)) ? $params->getHash : null;
+            $getHash = (isset($params->getHash)) ? $params->getHash : null;
             $emailConstraint = new Assert\Email();
             $emailConstraint->message = "This email is not valid !!";
             $validate_email = $this->get("validator")->validate($email, $emailConstraint);
@@ -76,7 +76,7 @@ class DefaultController extends Controller
             $petition = json_decode($json);            
             $jwt_auth = $this->get(JwtAuth::class);                            
             $identity = $jwt_auth -> decodeToken($petition);
-            return $helpers->json($identity);            
+            return $this->json($identity);            
         }
         else
         {
