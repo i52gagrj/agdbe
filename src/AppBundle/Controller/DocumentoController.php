@@ -76,15 +76,68 @@ class DocumentoController extends Controller {
 
 	 
 	public function listallAction(Request $request) {
-		// Devuelve el contenido de un documento por la id
+		// Devuelve el listado de todos los documentos de un cliente
+
 		echo "Hola mundo desde el controlador de listar Documentos";
 		die();		
 	}
 	
 
 	 
-	public function returnoneAction(Request $request) {
-		// Devuelve el listado de todos los documentos de un cliente
+	public function returnoneAction(Request $request) {		
+		// Devuelve el contenido de un documento por la id
+
+		/*
+
+    	$helpers = $this->get(Helpers::class);
+        $jwt_auth = $this->get(JwtAuth::class);
+
+        $token = $request->get('authorization', null);
+
+        $authCheck = $jwt_auth->checkToken($token);
+
+        $data = array(
+            'status' => 'error',
+            'code' => 400,
+            'msg' => 'Document not created !!'
+        );         
+
+        if($authCheck)
+        {   
+        	$id=$request->get('iddocumento', null);
+        	$em = $this->getDoctrine()->getManager();
+        	$documento = $em->getRepository('ModelBundle:Documento')->find($id);
+
+        	if($documento) {
+			    $data = array(
+			        'status' => 'Success',
+			        'code' => 200,
+			        'msg' => 'Document recovered !!', 
+			        'authcheck' => $authCheck,
+			        'documento' => $documento
+			    );            		
+        	}
+
+        	else {
+			    $data = array(
+			        'status' => 'error',
+			        'code' => 400,
+			        'msg' => 'Document not exist !!', 
+			        'authcheck' => $authCheck
+			    );            		        		
+        	}    			          	
+        }     			
+		
+		else
+		{
+	        $data = array(
+    	        'status' => 'error',
+        	    'code' => 400,
+            	'msg' => 'Authorization not valid'
+        	);         
+		}	
+		
+		*/		
 		echo "Hola mundo desde el controlador de devolver un Documento";
 		die();		
 	}
