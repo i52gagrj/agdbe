@@ -136,6 +136,8 @@ class DocumentoController extends Controller {
             	'msg' => 'Authorization not valid'
         	);         
 		}	
+
+		return $helpers->json($data);
 		
 		*/		
 		echo "Hola mundo desde el controlador de devolver un Documento";
