@@ -31,6 +31,7 @@ class DefaultController extends Controller
             //Login
             //Convertir json en objeto php
             $params = json_decode($json);
+            //Recoger los datos
             $email = (isset($params->email)) ? $params->email : null;
             $password = (isset($params->password)) ? $params->password : null;
             $getHash = (isset($params->getHash)) ? $params->getHash : null;
@@ -114,4 +115,3 @@ class DefaultController extends Controller
         
     }
 }
-
