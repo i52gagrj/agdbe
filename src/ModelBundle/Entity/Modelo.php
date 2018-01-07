@@ -63,6 +63,13 @@ class Modelo
      */
     private $contenido;
 
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="ruta", type="string", length=255)
+     */
+    private $ruta;    
+
 
     /**
      * Get id
@@ -218,6 +225,29 @@ class Modelo
         return $this->contenido;
     }
 
+    /**
+     * Set ruta
+     *
+     * @param string $ruta
+     *
+     * @return Modelo
+     */
+    public function setRuta($ruta)
+    {
+        $this->ruta = $ruta;
+
+        return $this;
+    }
+
+    /**
+     * Get ruta
+     *
+     * @return string
+     */
+    public function getRuta()
+    {
+        return $this->ruta;
+    }
 
     //ASOCIACIONES
 
