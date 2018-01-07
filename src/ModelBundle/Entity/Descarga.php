@@ -62,5 +62,22 @@ class Descarga
     {
         return $this->fechahora;
     }
+
+
+    //ASOCIACIONES
+
+    ///RELACIONES CON USUARIO Y MODELO///
+
+    /**
+     * @ORM\ManyToOne(targetEntity="Usuario", inversedBy="descargas")
+     * @ORM\JoinColumn(name="usuario_id", referencedColumnName="id")
+     */
+    private $usuario;
+
+    /**
+     * @ORM\ManyToOne(targetEntity="Modelo", inversedBy="descargas")
+     * @ORM\JoinColumn(name="modelo_id", referencedColumnName="id")
+     */
+    private $modelo;  
 }
 

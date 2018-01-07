@@ -217,5 +217,28 @@ class Modelo
     {
         return $this->contenido;
     }
+
+
+    //ASOCIACIONES
+
+    ///RELACIONES CON USUARIOS///
+
+    /**
+     * @ORM\ManyToOne(targetEntity="Usuario", inversedBy="modelos")
+     * @ORM\JoinColumn(name="usuario_id", referencedColumnName="id")
+     */
+    private $usuario;
+
+    ///RELACIONES CON DESCARGAS///
+
+    /**
+     * @ORM\OneToMany(targetEntity="Descarga", mappedBy="modelo")     
+     */
+    protected $descargas;
+ 
+    public function __construct()
+    {        
+        $this->descargas = new ArrayCollection();
+    } 
 }
 

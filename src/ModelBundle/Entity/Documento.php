@@ -155,5 +155,17 @@ class Documento
     {
         return $this->contenido;
     }
+
+
+    //ASOCIACIONES
+
+    //Asociación entre Documento y Usuario
+
+    /**
+     * @ORM\ManyToOne(targetEntity="Usuario", inversedBy="documentos")
+     * @ORM\JoinColumn(name="usuario_id", referencedColumnName="id")
+     */
+    private $usuario;
+    
 }
 

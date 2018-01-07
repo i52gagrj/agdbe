@@ -93,5 +93,16 @@ class Sesion
     {
         return $this->fin;
     }
+
+
+    //ASOCIACIONES
+
+    //Asociación entre Sesion y Usuario    
+
+    /**
+     * @ORM\ManyToOne(targetEntity="Usuario", inversedBy="sesiones")
+     * @ORM\JoinColumn(name="usuario_id", referencedColumnName="id")
+     */
+    private $usuario;
 }
 

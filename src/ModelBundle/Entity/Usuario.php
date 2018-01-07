@@ -186,5 +186,73 @@ class Usuario
     {
         return $this->fechaalta;
     }
+
+
+    //ASOCIACIONES
+
+    /// AUTORELACIÓN CLIENTE - ADMINISTRADOR ///
+
+    /**
+     * @ORM\ManyToOne(targetEntity="Usuario", inversedBy="clientes")
+     * @ORM\JoinColumn(name="admin_id", referencedColumnName="id")
+     */
+    private $admin;    
+
+    ///RELACIONES CON DOCUMENTOS, MODELOS, SESIONES, DESCARGAS Y MENSAJES  ///
+    ///AUTORELACIÓN ADMINISTRADOR - CLIENTES ///    
+
+    /**
+     * @ORM\OneToMany(targetEntity="Documento", mappedBy="usuario")     
+     */
+
+    protected $documentos;
+
+    /**
+     * @ORM\OneToMany(targetEntity="Modelo", mappedBy="usuario")
+     */
+
+    protected $modelos;
+
+    /**
+     * @ORM\OneToMany(targetEntity="Sesion", mappedBy="usuario")
+     */
+
+    protected $sesiones;
+
+    /**
+     * @ORM\OneToMany(targetEntity="Descarga", mappedBy="usuario")
+     */
+
+    protected $descargas;
+
+    /**
+     * @ORM\OneToMany(targetEntity="Usuario", mappedBy="admin")
+     */
+
+    protected $clientes;
+
+    /**
+     * @ORM\OneToMany(targetEntity="Mensaje", mappedBy="emisor")
+     */
+
+    protected $mensajesemitidos;    
+
+    /**
+     * @ORM\OneToMany(targetEntity="Mensaje", mappedBy="receptor")
+     */
+
+    protected $mensajesrecibidos;    
+ 
+    public function __construct()
+    {
+        $this->documentos = new ArrayCollection();
+        $this->modelos = new ArrayCollection();
+        $this->sesiones = new ArrayCollection();
+        $this->descargas = new ArrayCollection();
+        $this->clientes = new ArrayCollection();        
+        $this->mensajesemitidos = new ArrayCollection();
+        $this->mensajesrecibidos = new ArrayCollection();
+    }    
+
 }
 

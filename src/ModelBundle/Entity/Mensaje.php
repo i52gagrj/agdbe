@@ -93,5 +93,19 @@ class Mensaje
     {
         return $this->fechahora;
     }
+
+    //ASOCIACIONES
+
+    /**
+     * @ORM\ManyToOne(targetEntity="Usuario", inversedBy="mensajesemitidos")
+     * @ORM\JoinColumn(name="usuario_id", referencedColumnName="id")
+     */
+    private $emisor;
+
+    /**
+     * @ORM\ManyToOne(targetEntity="Usuario", inversedBy="mensajesrecibidos")
+     * @ORM\JoinColumn(name="usuario_id", referencedColumnName="id")
+     */
+    private $receptor; 
 }
 
