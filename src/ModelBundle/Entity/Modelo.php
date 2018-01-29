@@ -56,12 +56,12 @@ class Modelo
      */
     private $tipo;
 
-    /**
-     * @var string
-     *
-     * @ORM\Column(name="contenido", type="blob")
-     */
-    private $contenido;
+    // /**
+    // * @var string
+    // *
+    // * @ORM\Column(name="contenido", type="blob")
+    // */
+    //private $contenido;
 
     /**
      * @var string
@@ -201,29 +201,29 @@ class Modelo
         return $this->tipo;
     }
 
-    /**
-     * Set contenido
-     *
-     * @param string $contenido
-     *
-     * @return Modelo
-     */
-    public function setContenido($contenido)
-    {
-        $this->contenido = $contenido;
+    // /**
+    // * Set contenido
+    // *
+    // * @param string $contenido
+    // *
+    // * @return Modelo
+    // */
+    //public function setContenido($contenido)
+    //{
+    //    $this->contenido = $contenido;
+    // 
+    //    return $this;
+    //}
 
-        return $this;
-    }
-
-    /**
-     * Get contenido
-     *
-     * @return string
-     */
-    public function getContenido()
-    {
-        return $this->contenido;
-    }
+    // /**
+    //  * Get contenido
+    //  *
+    //  * @return string
+    //  */
+    // public function getContenido()
+    // {
+    //     return $this->contenido;
+    // }
 
     /**
      * Set ruta
