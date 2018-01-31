@@ -42,12 +42,19 @@ class Documento
      */
     private $tipo;
 
+    // /**
+    // * @var string
+    // *
+    // * @ORM\Column(name="contenido", type="blob")
+    // */
+    //private $contenido;
+
     /**
      * @var string
      *
-     * @ORM\Column(name="contenido", type="blob")
+     * @ORM\Column(name="ruta", type="string", length=255)
      */
-    private $contenido;
+    private $ruta;    
 
 
     /**
@@ -132,28 +139,52 @@ class Documento
         return $this->tipo;
     }
 
+    // /**
+    // * Set contenido
+    // *
+    // * @param string $contenido
+    // *
+    // * @return Modelo
+    // */
+    //public function setContenido($contenido)
+    //{
+    //    $this->contenido = $contenido;
+    // 
+    //    return $this;
+    //}
+
+    // /**
+    //  * Get contenido
+    //  *
+    //  * @return string
+    //  */
+    // public function getContenido()
+    // {
+    //     return $this->contenido;
+    // }
+
     /**
-     * Set contenido
+     * Set ruta
      *
-     * @param string $contenido
+     * @param string $ruta
      *
-     * @return Documento
+     * @return Modelo
      */
-    public function setContenido($contenido)
+    public function setRuta($ruta)
     {
-        $this->contenido = $contenido;
+        $this->ruta = $ruta;
 
         return $this;
     }
 
     /**
-     * Get contenido
+     * Get ruta
      *
      * @return string
      */
-    public function getContenido()
+    public function getRuta()
     {
-        return $this->contenido;
+        return $this->ruta;
     }
 
 
