@@ -37,14 +37,14 @@ class DocumentoController extends Controller {
 	        	$fechahora = new \Datetime("now");
 	        	$descripcion = (isset($params->descripcion)) ? $params->descripcion : null;
 	        	$tipo = (isset($params->tipo)) ? $params->tipo : null;
-	        	$contenido= (isset($params->contenido)) ? $params->contenido : null;
+	        	$ruta= (isset($params->ruta)) ? $params->ruta : null;
 	        }
 
         	$documento = new Documento();
         	$documento->setDescripcion($descripcion);
         	$documento->setTipo($tipo);
         	$documento->setFechahora($fechahora);
-        	$documento->setContenido($contenido);
+        	$documento->setRuta($ruta);
 
         	$em = $this->getDoctrine()->getManager();
         	$em->persist($documento);
@@ -138,7 +138,7 @@ class DocumentoController extends Controller {
 
 	 
 	public function returnoneAction(Request $request) {		
-		// Devuelve el contenido de un documento por la id
+		// Devuelve la ruta de un documento por la id
 
 		/*
 
