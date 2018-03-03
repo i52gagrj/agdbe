@@ -14,7 +14,7 @@ use AppBundle\Services\JwtAuth;
 class DescargaController extends Controller {
 
 	public function newAction(Request $request) {
-		echo "Hola mundo desde el controlador de Descarga";
+		echo "Hola mundo desde el controlador de Nueva Descarga";
 		die();
 	}	
 
@@ -23,5 +23,10 @@ class DescargaController extends Controller {
 		//Devuelve todas las descargas de un cliente
 	}
 	*/
+
+	public function listallAction(Request $request) {
+		echo "Hola mundo desde el controlador de Listado de descargas de un cliente/usuario";
+		die();
+	}
 
 }

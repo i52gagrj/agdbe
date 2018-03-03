@@ -2,6 +2,10 @@
 
 namespace AppBundle\Controller;
 
+/*header("Access-Control-Allow-Origin: *");
+header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+header('Access-Control-Allow-Headers','X-Requested-With, content-type');*/
+
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
@@ -13,10 +17,36 @@ use AppBundle\Services\Helpers;
 use AppBundle\Services\JwtAuth;
 
 class DocumentoController extends Controller {
+/*
+
+ if($_POST['ruta']){
+    $rutaBase = $_POST['ruta'];
+ }else{
+    $rutaBase ='../archivos';
+ }
+
+
+if (isset($_FILES['file'])) {
+
+  $archivoRuta = $rutaBase.'/'.$_FILES['file']['name'];
+
+
+  if ( move_uploaded_file($_FILES['file']['tmp_name'] , $archivoRuta) ) {
+      
+    echo json_encode(array(
+      'status'  => 'ok',
+    ));
+  }
+
+} 
+*/
+
 
 	public function newAction(Request $request) {
         $helpers = $this->get(Helpers::class);
-        $jwt_auth = $this->get(JwtAuth::class);
+		$jwt_auth = $this->get(JwtAuth::class);
+		
+		// Requerir autorización
 
         $token = $request->get('authorization', null);
         $authCheck = $jwt_auth->checkToken($token);
@@ -29,13 +59,20 @@ class DocumentoController extends Controller {
 
         if($authCheck)
         {        	
+			//Requerir fichero
+
 	        $json = $request->get('json', null);
-	        $params = json_decode($json);
+			$params = json_decode($json);
+			
+			//$rutaBase = '../archivos';
 
 	        if($json != null)
 	        {        	
+				
 	        	$fechahora = new \Datetime("now");
-	        	$descripcion = (isset($params->descripcion)) ? $params->descripcion : null;
+				$descripcion = (isset($params->descripcion)) ? $params->descripcion : null;
+				
+
 	        	$tipo = (isset($params->tipo)) ? $params->tipo : null;
 	        	$ruta= (isset($params->ruta)) ? $params->ruta : null;
 	        }
@@ -77,6 +114,8 @@ class DocumentoController extends Controller {
 	 
 	public function listallAction(Request $request) {
 		// Devuelve el listado de todos los documentos de un cliente
+		// La idea es que devuelva la descripción y los datos, no la ruta!!
+
 		/*
 
     	$helpers = $this->get(Helpers::class);
@@ -139,6 +178,13 @@ class DocumentoController extends Controller {
 	 
 	public function returnoneAction(Request $request) {		
 		// Devuelve la ruta de un documento por la id
+		/*
+		Recuperamos la autorización
+		De ser correcta, se busca el documento por la id pasada
+		Si está, se devuelve este
+		Si no está, se devuelve un mensaje de no encontrado
+		De ser incorrecta la autorización, se devuelve un mensaje de error en la misma
+	 	*/		
 
 		/*
 
@@ -193,6 +239,8 @@ class DocumentoController extends Controller {
 		return $helpers->json($data);
 		
 		*/		
+
+
 		echo "Hola mundo desde el controlador de devolver un Documento";
 		die();		
 	}
