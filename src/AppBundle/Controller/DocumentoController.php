@@ -10,6 +10,8 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\Validator\Constraints as Assert;
 use ModelBundle\Entity\Usuario;
 use ModelBundle\Entity\Documento;
@@ -58,30 +60,26 @@ if (isset($_FILES['file'])) {
         );         
 
         if($authCheck)
-        {        	
-			//Requerir fichero
-
+        {        			
+			$decoded = $jwt_auth->decodeToken($token);
 	        $json = $request->get('json', null);
 			$params = json_decode($json);
+			//Requerir fichero
+			$uploadedFichero = $request->files->get('file');
 			
-			//$rutaBase = '../archivos';
+			$documento = new Documento();			
+			/**
+			 * @var UploadedFile $fichero
+			 */
+			$fichero = $uploadedFichero;
+			$nombrefichero=md5(uniqid()).'.'.$fichero->guessExtension();
+			$fichero->move($this->getParameter('directorio_documentos'),$nombrefichero);
 
-	        if($json != null)
-	        {        	
-				
-	        	$fechahora = new \Datetime("now");
-				$descripcion = (isset($params->descripcion)) ? $params->descripcion : null;
-				
-
-	        	$tipo = (isset($params->tipo)) ? $params->tipo : null;
-	        	$ruta= (isset($params->ruta)) ? $params->ruta : null;
-	        }
-
-        	$documento = new Documento();
-        	$documento->setDescripcion($descripcion);
-        	$documento->setTipo($tipo);
-        	$documento->setFechahora($fechahora);
-        	$documento->setRuta($ruta);
+			$documento->setRuta($nombrefichero);
+        	$documento->setDescripcion($params->descripcion);
+        	$documento->setTipo($fichero->guessExtension());
+			$documento->setFechahora(new \Datetime("now"));
+			$documento->setUsuario_id($decoded->sub);       
 
         	$em = $this->getDoctrine()->getManager();
         	$em->persist($documento);
@@ -90,7 +88,7 @@ if (isset($_FILES['file'])) {
 		    $data = array(
 		        'status' => 'Success',
 		        'code' => 200,
-		        'msg' => 'New Document created !!', 
+		        'msg' => 'New Document created!!', 
 		        'authcheck' => $authCheck,
 		        'documento' => $documento
 		    );    
