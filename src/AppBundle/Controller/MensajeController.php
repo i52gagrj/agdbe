@@ -14,8 +14,68 @@ use AppBundle\Services\JwtAuth;
 class MensajeController extends Controller {
 
 	public function newAction(Request $request) {
-		echo "Hola mundo desde el controlador de Mensaje";
-		die();
+        $helpers = $this->get(Helpers::class);
+        $jwt_auth = $this->get(JwtAuth::class);
+
+        $token = $request->get('authorization', null);
+		$authCheck = $jwt_auth->checkToken($token);
+
+		$data = array(
+			'status' => 'error',
+			'code' => 400,
+			'msg' => 'Authorization not valid !!'
+		); 
+		
+        if($authCheck){		
+			$decode = $jwt_auth->decodeToken($token);
+			$identity = $jwt_auth->returnUser($decode->sub);
+			$json = $request->get('json', null);			
+
+			if($json != null){
+				$params = json_decode($json);
+				$creacion = new \Datetime('now');
+				$origen = $identity;
+				$destino = (isset($params->destino)) ? $jwt_auth->returnUser($params->destino) : null;
+				$texto = (isset($params->texto)) ? $params->texto : null;
+				
+				//Crear objeto mensaje
+				$mensaje = new Mensaje();
+				
+				// Salvar los datos en la entidad mensaje
+				$mensaje->setTexto($texto);				
+				$mensaje->setFechahora($creacion);
+				$mensaje->setEmisor($identity);
+				$mensaje->setReceptor($destino);
+
+				// Crear conexion a base de datos
+				$em = $this->getDoctrine()->getManager();			
+
+				// Guardar los datos
+        		$em->persist($mensaje);
+        		$em->flush();
+
+				$data = array(
+					'status' => 'success',
+					'code' => 200,
+					'msg' => 'Message stored'
+				); 
+			}else{
+				$data = array(
+					'status' => 'error',
+					'code' => 400,
+					'msg' => 'Params failed'
+				); 
+			}
+
+		}else{
+			$data = array(
+				'status' => 'error',
+				'code' => 400,
+				'msg' => 'Authorization not valid !!'
+			); 
+		}	
+
+		return $helpers->json($data);		
 	}	
 
 	public function todoAction(Request $request) {
@@ -23,5 +83,5 @@ class MensajeController extends Controller {
 		echo "Hola mundo desde el envio de todos los mensajes";
 		die();		
 	}
-
+	
 }

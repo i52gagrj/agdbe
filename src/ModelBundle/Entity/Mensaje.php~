@@ -107,52 +107,5 @@ class Mensaje
      * @ORM\JoinColumn(name="receptor", referencedColumnName="id")
      */
     private $receptor; 
-
-    /**
-     * Set emisor
-     *
-     * @param \ModelBundle\Entity\Usuario $emisor
-     *
-     * @return Mensaje
-     */
-    public function setEmisor(\ModelBundle\Entity\Usuario $emisor = null)
-    {
-        $this->emisor = $emisor;
-
-        return $this;
-    }
-
-    /**
-     * Get emisor
-     *
-     * @return \ModelBundle\Entity\Usuario
-     */
-    public function getEmisor()
-    {
-        return $this->emisor;
-    }
-
-    /**
-     * Set receptor
-     *
-     * @param \ModelBundle\Entity\Usuario $receptor
-     *
-     * @return Mensaje
-     */
-    public function setReceptor(\ModelBundle\Entity\Usuario $receptor = null)
-    {
-        $this->receptor = $receptor;
-
-        return $this;
-    }
-
-    /**
-     * Get receptor
-     *
-     * @return \ModelBundle\Entity\Usuario
-     */
-    public function getReceptor()
-    {
-        return $this->receptor;
-    }
 }
+

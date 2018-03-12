@@ -79,52 +79,5 @@ class Descarga
      * @ORM\JoinColumn(name="modelo_id", referencedColumnName="id")
      */
     private $modelo;  
-
-    /**
-     * Set usuario
-     *
-     * @param \ModelBundle\Entity\Usuario $usuario
-     *
-     * @return Descarga
-     */
-    public function setUsuario(\ModelBundle\Entity\Usuario $usuario = null)
-    {
-        $this->usuario = $usuario;
-
-        return $this;
-    }
-
-    /**
-     * Get usuario
-     *
-     * @return \ModelBundle\Entity\Usuario
-     */
-    public function getUsuario()
-    {
-        return $this->usuario;
-    }
-
-    /**
-     * Set modelo
-     *
-     * @param \ModelBundle\Entity\Modelo $modelo
-     *
-     * @return Descarga
-     */
-    public function setModelo(\ModelBundle\Entity\Modelo $modelo = null)
-    {
-        $this->modelo = $modelo;
-
-        return $this;
-    }
-
-    /**
-     * Get modelo
-     *
-     * @return \ModelBundle\Entity\Modelo
-     */
-    public function getModelo()
-    {
-        return $this->modelo;
-    }
 }
+

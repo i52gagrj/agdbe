@@ -50,7 +50,7 @@ class JwtAuth
 				"nombre" => $user->getNombre(),
 				"idsesion" => $sesionid,
 				"iat" => time(),
-				"exp" => time() + (900)
+				"exp" => time() + (90000)
 			);	
 
 			$jwt = JWT::encode($token, $this->key, 'HS256');
@@ -88,7 +88,7 @@ class JwtAuth
 				"nombre" => $decoded->nombre,
 				"idsesion" => $decoded->idsesion,
 				"iat" => time(),
-				"exp" => time() + (900)
+				"exp" => time() + (90000)
 			);	
 			$auth = JWT::encode($token, $this->key, 'HS256');
 
@@ -133,7 +133,25 @@ class JwtAuth
         else {
         	return $answer;        
         }	
-    }	
+	}	
+	
+	public function returnUser($id){
+		if($id){
+			$user = $this->manager->getRepository('ModelBundle:Usuario')->find($id);
+			return $user;
+		}
+		else{
+			return null;
+		}
+
+		/*$answer = array(
+			"status" => "Success",
+			"code" => 200,
+			"message" => "Bien de momento"
+		);
+
+		return "Sin problemas por aqui";*/
+	}
 
     /*
 	public function finsesion($data){

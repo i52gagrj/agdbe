@@ -254,5 +254,266 @@ class Usuario
         $this->mensajesrecibidos = new ArrayCollection();
     }    
 
-}
 
+    /**
+     * Set admin
+     *
+     * @param \ModelBundle\Entity\Usuario $admin
+     *
+     * @return Usuario
+     */
+    public function setAdmin(\ModelBundle\Entity\Usuario $admin = null)
+    {
+        $this->admin = $admin;
+
+        return $this;
+    }
+
+    /**
+     * Get admin
+     *
+     * @return \ModelBundle\Entity\Usuario
+     */
+    public function getAdmin()
+    {
+        return $this->admin;
+    }
+
+    /**
+     * Add documento
+     *
+     * @param \ModelBundle\Entity\Documento $documento
+     *
+     * @return Usuario
+     */
+    public function addDocumento(\ModelBundle\Entity\Documento $documento)
+    {
+        $this->documentos[] = $documento;
+
+        return $this;
+    }
+
+    /**
+     * Remove documento
+     *
+     * @param \ModelBundle\Entity\Documento $documento
+     */
+    public function removeDocumento(\ModelBundle\Entity\Documento $documento)
+    {
+        $this->documentos->removeElement($documento);
+    }
+
+    /**
+     * Get documentos
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getDocumentos()
+    {
+        return $this->documentos;
+    }
+
+    /**
+     * Add modelo
+     *
+     * @param \ModelBundle\Entity\Modelo $modelo
+     *
+     * @return Usuario
+     */
+    public function addModelo(\ModelBundle\Entity\Modelo $modelo)
+    {
+        $this->modelos[] = $modelo;
+
+        return $this;
+    }
+
+    /**
+     * Remove modelo
+     *
+     * @param \ModelBundle\Entity\Modelo $modelo
+     */
+    public function removeModelo(\ModelBundle\Entity\Modelo $modelo)
+    {
+        $this->modelos->removeElement($modelo);
+    }
+
+    /**
+     * Get modelos
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getModelos()
+    {
+        return $this->modelos;
+    }
+
+    /**
+     * Add sesione
+     *
+     * @param \ModelBundle\Entity\Sesion $sesione
+     *
+     * @return Usuario
+     */
+    public function addSesione(\ModelBundle\Entity\Sesion $sesione)
+    {
+        $this->sesiones[] = $sesione;
+
+        return $this;
+    }
+
+    /**
+     * Remove sesione
+     *
+     * @param \ModelBundle\Entity\Sesion $sesione
+     */
+    public function removeSesione(\ModelBundle\Entity\Sesion $sesione)
+    {
+        $this->sesiones->removeElement($sesione);
+    }
+
+    /**
+     * Get sesiones
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getSesiones()
+    {
+        return $this->sesiones;
+    }
+
+    /**
+     * Add descarga
+     *
+     * @param \ModelBundle\Entity\Descarga $descarga
+     *
+     * @return Usuario
+     */
+    public function addDescarga(\ModelBundle\Entity\Descarga $descarga)
+    {
+        $this->descargas[] = $descarga;
+
+        return $this;
+    }
+
+    /**
+     * Remove descarga
+     *
+     * @param \ModelBundle\Entity\Descarga $descarga
+     */
+    public function removeDescarga(\ModelBundle\Entity\Descarga $descarga)
+    {
+        $this->descargas->removeElement($descarga);
+    }
+
+    /**
+     * Get descargas
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getDescargas()
+    {
+        return $this->descargas;
+    }
+
+    /**
+     * Add cliente
+     *
+     * @param \ModelBundle\Entity\Usuario $cliente
+     *
+     * @return Usuario
+     */
+    public function addCliente(\ModelBundle\Entity\Usuario $cliente)
+    {
+        $this->clientes[] = $cliente;
+
+        return $this;
+    }
+
+    /**
+     * Remove cliente
+     *
+     * @param \ModelBundle\Entity\Usuario $cliente
+     */
+    public function removeCliente(\ModelBundle\Entity\Usuario $cliente)
+    {
+        $this->clientes->removeElement($cliente);
+    }
+
+    /**
+     * Get clientes
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getClientes()
+    {
+        return $this->clientes;
+    }
+
+    /**
+     * Add mensajesemitido
+     *
+     * @param \ModelBundle\Entity\Mensaje $mensajesemitido
+     *
+     * @return Usuario
+     */
+    public function addMensajesemitido(\ModelBundle\Entity\Mensaje $mensajesemitido)
+    {
+        $this->mensajesemitidos[] = $mensajesemitido;
+
+        return $this;
+    }
+
+    /**
+     * Remove mensajesemitido
+     *
+     * @param \ModelBundle\Entity\Mensaje $mensajesemitido
+     */
+    public function removeMensajesemitido(\ModelBundle\Entity\Mensaje $mensajesemitido)
+    {
+        $this->mensajesemitidos->removeElement($mensajesemitido);
+    }
+
+    /**
+     * Get mensajesemitidos
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getMensajesemitidos()
+    {
+        return $this->mensajesemitidos;
+    }
+
+    /**
+     * Add mensajesrecibido
+     *
+     * @param \ModelBundle\Entity\Mensaje $mensajesrecibido
+     *
+     * @return Usuario
+     */
+    public function addMensajesrecibido(\ModelBundle\Entity\Mensaje $mensajesrecibido)
+    {
+        $this->mensajesrecibidos[] = $mensajesrecibido;
+
+        return $this;
+    }
+
+    /**
+     * Remove mensajesrecibido
+     *
+     * @param \ModelBundle\Entity\Mensaje $mensajesrecibido
+     */
+    public function removeMensajesrecibido(\ModelBundle\Entity\Mensaje $mensajesrecibido)
+    {
+        $this->mensajesrecibidos->removeElement($mensajesrecibido);
+    }
+
+    /**
+     * Get mensajesrecibidos
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getMensajesrecibidos()
+    {
+        return $this->mensajesrecibidos;
+    }
+}

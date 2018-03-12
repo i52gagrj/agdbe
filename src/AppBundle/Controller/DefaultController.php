@@ -54,7 +54,7 @@ class DefaultController extends Controller
             else
             {
                 $data = array(
-                    'status' => 'success',
+                    'status' => 'error',
                     'data' => 'Email incorrect'
                 ); 
             }        
