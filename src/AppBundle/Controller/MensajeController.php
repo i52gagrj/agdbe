@@ -38,27 +38,36 @@ class MensajeController extends Controller {
 				$destino = (isset($params->destino)) ? $jwt_auth->returnUser($params->destino) : null;
 				$texto = (isset($params->texto)) ? $params->texto : null;
 				
-				//Crear objeto mensaje
-				$mensaje = new Mensaje();
-				
-				// Salvar los datos en la entidad mensaje
-				$mensaje->setTexto($texto);				
-				$mensaje->setFechahora($creacion);
-				$mensaje->setEmisor($identity);
-				$mensaje->setReceptor($destino);
+				if($destino && $texto){
+					//Crear objeto mensaje
+					$mensaje = new Mensaje();
+					
+					// Salvar los datos en la entidad mensaje
+					$mensaje->setTexto($texto);				
+					$mensaje->setFechahora($creacion);
+					$mensaje->setEmisor($identity);
+					$mensaje->setReceptor($destino);
 
-				// Crear conexion a base de datos
-				$em = $this->getDoctrine()->getManager();			
+					// Crear conexion a base de datos
+					$em = $this->getDoctrine()->getManager();			
 
-				// Guardar los datos
-        		$em->persist($mensaje);
-        		$em->flush();
+					// Guardar los datos
+					$em->persist($mensaje);
+					$em->flush();
 
-				$data = array(
-					'status' => 'success',
-					'code' => 200,
-					'msg' => 'Message stored'
-				); 
+					$data = array(
+						'status' => 'success',
+						'code' => 200,
+						'msg' => 'Message stored'
+					); 
+				}else{
+					$data = array(
+						'status' => 'error',
+						'code' => 400,
+						'msg' => 'Wrong data'
+					); 					
+				}
+
 			}else{
 				$data = array(
 					'status' => 'error',
@@ -82,6 +91,5 @@ class MensajeController extends Controller {
 		//Mostrar todos los mensajes de un usuario, que se pasa como parametro
 		echo "Hola mundo desde el envio de todos los mensajes";
 		die();		
-	}
-	
+	}	
 }
