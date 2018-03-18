@@ -31,14 +31,16 @@ class MensajeController extends Controller {
 			$identity = $jwt_auth->returnUser($decode->sub);
 			$json = $request->get('json', null);			
 
-			if($json != null){
+			if($json != null)
+			{
 				$params = json_decode($json);
 				$creacion = new \Datetime('now');
 				$origen = $identity;
 				$destino = (isset($params->destino)) ? $jwt_auth->returnUser($params->destino) : null;
 				$texto = (isset($params->texto)) ? $params->texto : null;
 				
-				if($destino && $texto){
+				if($destino && $texto)
+				{
 					//Crear objeto mensaje
 					$mensaje = new Mensaje();
 					
@@ -58,29 +60,40 @@ class MensajeController extends Controller {
 					$data = array(
 						'status' => 'success',
 						'code' => 200,
-						'msg' => 'Message stored'
+						'msg' => 'Message stored',
+						'token' => $authCheck
 					); 
-				}else{
+
+				}
+				else
+				{
 					$data = array(
 						'status' => 'error',
 						'code' => 400,
-						'msg' => 'Wrong data'
+						'msg' => 'Wrong data',
+						'token' => $authCheck
 					); 					
 				}
 
-			}else{
+			}
+			else
+			{
 				$data = array(
 					'status' => 'error',
 					'code' => 400,
-					'msg' => 'Params failed'
+					'msg' => 'Params failed',
+					'token' => $authCheck
 				); 
 			}
 
-		}else{
+		}
+		else
+		{
 			$data = array(
 				'status' => 'error',
 				'code' => 400,
-				'msg' => 'Authorization not valid !!'
+				'msg' => 'Authorization not valid !!',
+				'token' => $authCheck
 			); 
 		}	
 

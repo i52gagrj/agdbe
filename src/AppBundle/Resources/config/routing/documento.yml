@@ -1,3 +1,8 @@
+documento_prueba:
+    path: /prueba
+    defaults: { _controller: "AppBundle:Documento:prueba" }
+    methods: POST
+
 documento_new:
     path: /new
     defaults: { _controller: "AppBundle:Documento:new" }
