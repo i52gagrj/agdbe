@@ -69,7 +69,8 @@ class DefaultController extends Controller
 
         $data = array(
             'status' => 'error',
-            'data' => 'Send json via post!!!'
+            'code' => 400,
+            'data' => 'Json Incorrect'
         );
 
         if($json != null)
@@ -77,14 +78,20 @@ class DefaultController extends Controller
             $petition = json_decode($json);            
             $jwt_auth = $this->get(JwtAuth::class);                            
             $identity = $jwt_auth -> decodeToken($petition);
-            return $this->json($identity);            
+            //return $this->json($identity);            
+            $data = array(
+                'status' => 'success',
+                'code' => 200,
+                'data' => $identity
+            );             
+            return $helpers->json($data);
         }
         else
         {
-            $data = array(
-                'status' => 'success',
+            /*$data = array(
+                'status' => 'error',
                 'data' => 'Json Incorrect'
-            );             
+            );*/             
             return $helpers->json($data);
         }   
                             

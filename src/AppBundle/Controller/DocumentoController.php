@@ -2,9 +2,11 @@
 
 namespace AppBundle\Controller;
 
-/*header("Access-Control-Allow-Origin: *");
+/*
+header("Access-Control-Allow-Origin: *");
 header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-header('Access-Control-Allow-Headers','X-Requested-With, content-type');*/
+header('Access-Control-Allow-Headers','X-Requested-With, content-type');
+*/
 
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
@@ -19,38 +21,72 @@ use AppBundle\Services\Helpers;
 use AppBundle\Services\JwtAuth;
 
 class DocumentoController extends Controller {
-/*
 
- if($_POST['ruta']){
-    $rutaBase = $_POST['ruta'];
- }else{
-    $rutaBase ='../archivos';
- }
+	public function pruebaAction(Request $request) {
+        $helpers = $this->get(Helpers::class);
+		//$jwt_auth = $this->get(JwtAuth::class);
 
+		$uploadedFichero = $request->files->get('file');
 
-if (isset($_FILES['file'])) {
+		$token = $request->get('authorization');
 
-  $archivoRuta = $rutaBase.'/'.$_FILES['file']['name'];
+		$usuario = $request->get('usuario',null);
+			
+		if($uploadedFichero)
+		{			
+			/**
+			  * @var UploadedFile $fichero;
+			  */ 				
+			$fichero = $uploadedFichero;
+			$nombrefichero=md5(uniqid()).'.'.$fichero->guessExtension();
+			$fichero->move($this->getParameter('directorio_documentos'),$nombrefichero);
 
+			if($usuario){
+				$data = array(
+					'status' => 'success',
+					'code' => 200,
+					'msg' => 'File moved with user',
+					'token' => $token,
+					'usuario' => $usuario
+				); 
+			}
+			else
+			{
+				$data = array(
+					'status' => 'success',
+					'code' => 200,
+					'msg' => 'File moved without user',
+					'token' => $token,
+					'usuario' => $usuario
+				); 
+			}
+		}
+		else
+		{
+			$data = array(
+				'status' => 'error',
+				'code' => 400,
+				'msg' => 'File not found'
+			); 
+		}
 
-  if ( move_uploaded_file($_FILES['file']['tmp_name'] , $archivoRuta) ) {
-      
-    echo json_encode(array(
-      'status'  => 'ok',
-    ));
-  }
+		return $helpers->json($data);	
 
-} 
-*/
-
+	}
 
 	public function newAction(Request $request) {
         $helpers = $this->get(Helpers::class);
 		$jwt_auth = $this->get(JwtAuth::class);
+
+		/* NOTA
+		Hay que añadir una condición para que solo puedan añadir documentos los usuarios clientes, y no lo puedan hacer los administradores
+		En el caso de modelos, será simetrico: solo podrán añadirlos los administradores, y no los clientes.
+		*/
 		
 		// Requerir autorización
 
-        $token = $request->get('authorization', null);
+
+        $token = $request->get('authorization');
         $authCheck = $jwt_auth->checkToken($token);
 
         $data = array(
@@ -61,37 +97,56 @@ if (isset($_FILES['file'])) {
 
         if($authCheck)
         {        			
+			// Recuperar la identidad del usuario
 			$decoded = $jwt_auth->decodeToken($token);
+			$identity = $jwt_auth->returnUser($decoded->sub);
+
+			// Requerir los datos json enviados
 	        $json = $request->get('json', null);
 			$params = json_decode($json);
-			//Requerir fichero
-			$uploadedFichero = $request->files->get('file');
+
+			// Requerir fichero
+			$uploadedFichero = $request->files->get('file');			
 			
-			$documento = new Documento();			
-			/**
-			 * @var UploadedFile $fichero
-			 */
-			$fichero = $uploadedFichero;
-			$nombrefichero=md5(uniqid()).'.'.$fichero->guessExtension();
-			$fichero->move($this->getParameter('directorio_documentos'),$nombrefichero);
+			if($uploadedFichero)
+			{														
+				/**
+				  * @var UploadedFile $fichero;
+				  */ 				
+				$fichero = $uploadedFichero;
+				$tipo = $fichero->guessExtension();
+				$nombrefichero=md5(uniqid()).'.'.$tipo;
+				$fichero->move($this->getParameter('directorio_documentos'),$nombrefichero);
+			
+				$documento = new Documento();
+				$documento->setRuta($nombrefichero);
+				$documento->setDescripcion($params->descripcion);
+				$documento->setTipo($tipo);				
+				$documento->setFechahora(new \Datetime("now"));
+				$documento->setUsuario($identity);       
 
-			$documento->setRuta($nombrefichero);
-        	$documento->setDescripcion($params->descripcion);
-        	$documento->setTipo($fichero->guessExtension());
-			$documento->setFechahora(new \Datetime("now"));
-			$documento->setUsuario_id($decoded->sub);       
-
-        	$em = $this->getDoctrine()->getManager();
-        	$em->persist($documento);
-        	$em->flush();        			
-
-		    $data = array(
-		        'status' => 'Success',
-		        'code' => 200,
-		        'msg' => 'New Document created!!', 
-		        'authcheck' => $authCheck,
-		        'documento' => $documento
-		    );    
+				$em = $this->getDoctrine()->getManager();
+				$em->persist($documento);
+				$em->flush();        			
+				
+				$data = array(
+					'status' => 'Success',
+					'code' => 200,
+					'msg' => 'New Document created!!', 					
+					'token' => $authCheck,
+					'documento' => $documento
+				);    
+			}
+			else
+			{
+				$data = array(
+					'status' => 'error',
+					'code' => 400,
+					'msg' => 'File not send', 
+					'descripcion' => $params->descripcion,
+					'token' => $authCheck
+				); 				
+			}
 		       		
         }
 
@@ -100,8 +155,9 @@ if (isset($_FILES['file'])) {
 	        $data = array(
 	            'status' => 'error',
 	            'code' => 400,
-	            'msg' => 'Authorization not valid !!', 
-		        'authcheck' => $authCheck
+	            'msg' => 'Authorization not valid !!',
+				'authcheck' => $authCheck,
+				'token' => $token
 	        ); 
         }
         
@@ -113,6 +169,11 @@ if (isset($_FILES['file'])) {
 	public function listallAction(Request $request) {
 		// Devuelve el listado de todos los documentos de un cliente
 		// La idea es que devuelva la descripción y los datos, no la ruta!!
+
+		// Si se pasa el usuario como parametro, se devolverán los documentos del usuario (descripción y datos, no ruta)
+		// Esto serviria para que los administradores pasen el id de un usario y recuperen sus documentos
+		// Si no se pasa, se recupera el usario del token
+		// Esta manera servirá para que los usuarios recuperen el listado de sus documentos
 
 		/*
 
