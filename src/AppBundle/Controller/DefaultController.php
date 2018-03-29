@@ -1,12 +1,16 @@
 <?php
 namespace AppBundle\Controller;
+
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Validator\Constraints as Assert;
 use AppBundle\Services\Helpers;
 use AppBundle\Services\JwtAuth;
+
 class DefaultController extends Controller
 {
     public function indexAction(Request $request)
@@ -76,49 +80,55 @@ class DefaultController extends Controller
         if($json != null)
         {
             $petition = json_decode($json);            
+
             $jwt_auth = $this->get(JwtAuth::class);                            
-            $identity = $jwt_auth -> decodeToken($petition);
-            //return $this->json($identity);            
+            $identity = $jwt_auth->decodeToken($petition);    
+            
             $data = array(
                 'status' => 'success',
                 'code' => 200,
                 'data' => $identity
-            );             
-            return $helpers->json($data);
+            );            
         }
-        else
-        {
-            /*$data = array(
-                'status' => 'error',
-                'data' => 'Json Incorrect'
-            );*/             
-            return $helpers->json($data);
-        }   
-                            
-    }
+     
+        $mandar = new Response(json_encode($data));
+        $mandar->headers->set('Content-Type', 'application/json');
+        return $mandar;
 
+        //return $helpers->json($data);                            
+    }
 
     public function pruebasAction(Request $request) {
         $token = $request->get("authorization", null);
         $helpers = $this->get(Helpers::class);
         $jwt_auth = $this->get(JwtAuth::class);
-        if($token && $jwt_auth->checkToken($token)){
-            $em = $this->getDoctrine()->getManager();
-            $userRepo = $em->getRepository('ModelBundle:Usuario');
-            $users = $userRepo->findAll();            
-            return $helpers->json(array(
+        $newtoken = $jwt_auth->checkToken($token);
+        if($token && $newtoken){                
+            $datos = $jwt_auth->decodeToken($token);   
+            $usuario = $jwt_auth->returnUser($datos->sub);         
+                
+            //echo $datos->sub;
+            //die();            
+
+            $json = array(
                 'status' => 'success', 
-                'users' => $users
-            ));
+                'users' => $usuario,
+                'token' => $newtoken
+            );
         }
         else 
         {
-            return $helpers->json(array(
+            $json = array(
                 'status' => 'error', 
                 'code' => 400,
                 'users' => 'Authorization not valid'
-            ));    
+            );    
         }        
         
+        /*$mandar = new Response(json_encode($json));
+        $mandar->headers->set('Content-Type', 'application/json');
+        return $mandar;*/
+
+        return $helpers->json($json);
     }
 }

@@ -1,5 +1,14 @@
 <?php
 namespace AppBundle\Services;
+
+//use ModelBundle\Entity\Usuario;
+use Symfony\Component\Serializer\Serializer;
+use Symfony\Component\Serializer\Encoder\XmlEncoder;
+use Symfony\Component\Serializer\Encoder\JsonEncoder;
+use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
+use Symfony\Component\Serializer\Normalizer\GetSetMethodNormalizer;
+use Symfony\Component\Serializer\Normalizer\PropertyNormalizer;
+use Symfony\Component\Serializer\Normalizer\JsonSerializableNormalizer;
  
 class Helpers
 {
@@ -12,9 +21,24 @@ class Helpers
 
 	public function json($data) 
 	{
-		$normalizers = array(new \Symfony\Component\Serializer\Normalizer\GetSetMethodNormalizer());
-		$encoders = array("json" => new \Symfony\Component\Serializer\Encoder\JsonEncoder());
-		$serializer = new \Symfony\Component\Serializer\Serializer($normalizers, $encoders);
+		$encoders = array("json" => new JsonEncoder());
+		//$encoders = array(new JsonEncoder());
+		
+		//$normalizers = array(new ObjectNormalizer());
+		//$normalizers = array(new GetSetMethodNormalizer());
+		//$normalizers = array(new PropertyNormalizer());
+		//$normalizers = array(new JsonSerializableNormalizer());
+
+		//$normalizer = new JsonSerializableNormalizer();
+		$normalizer = new GetSetMethodNormalizer();
+		//$normalizer = new ObjectNormalizer();
+        $normalizer->setCircularReferenceLimit(1);
+        $normalizer->setCircularReferenceHandler(function($object){
+            /** @var Media $object */
+            return $object->getId();
+        }); 
+		
+		$serializer = new Serializer([$normalizer], $encoders);
 
 		$json = $serializer->serialize($data, 'json');
 

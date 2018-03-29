@@ -10,6 +10,7 @@ header('Access-Control-Allow-Headers','X-Requested-With, content-type');
 
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Symfony\Component\PropertyAccess\PropertyAccess;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -24,14 +25,16 @@ class DocumentoController extends Controller {
 
 	public function pruebaAction(Request $request) {
         $helpers = $this->get(Helpers::class);
-		//$jwt_auth = $this->get(JwtAuth::class);
+		$jwt_auth = $this->get(JwtAuth::class);
 
 		$uploadedFichero = $request->files->get('file');
 
 		$token = $request->get('authorization');
 
-		$usuario = $request->get('usuario',null);
-			
+		$token = $jwt_auth->checkToken($token);
+
+		$usuario = $jwt_auth->returnUser($request->get('usuario', null));
+
 		if($uploadedFichero)
 		{			
 			/**
@@ -70,7 +73,8 @@ class DocumentoController extends Controller {
 			); 
 		}
 
-		return $helpers->json($data);	
+		return new JsonResponse($data);
+		//return $helpers->json($data);
 
 	}
 
@@ -127,14 +131,20 @@ class DocumentoController extends Controller {
 
 				$em = $this->getDoctrine()->getManager();
 				$em->persist($documento);
-				$em->flush();        			
+				$em->flush();   
+				
+				$datosdocumento = array(
+					'Id' => $documento->getId(),
+					'Descripcion' => $documento->getDescripcion(),					
+					'Tipo' => $documento->getTipo()
+				);
 				
 				$data = array(
 					'status' => 'Success',
 					'code' => 200,
 					'msg' => 'New Document created!!', 					
 					'token' => $authCheck,
-					'documento' => $documento
+					'documento' => $datosdocumento
 				);    
 			}
 			else
@@ -161,7 +171,7 @@ class DocumentoController extends Controller {
 	        ); 
         }
         
-		return $helpers->json($data);	
+		return $helpers->json($data);
 			
 	}	
 

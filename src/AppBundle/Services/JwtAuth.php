@@ -36,6 +36,7 @@ class JwtAuth
 			$sesion = new Sesion;
 			$sesion->setInicio(new \Datetime("now"));
 			$sesion->setFin(new \Datetime("+15 minutes"));
+			$sesion->setUsuario($user);
 
 			$this->manager->persist($sesion);	
 			$this->manager->flush();
@@ -49,6 +50,7 @@ class JwtAuth
 				"email" => $user->getEmail(),
 				"nombre" => $user->getNombre(),
 				"idsesion" => $sesionid,
+				"rol" => $user->getRol(),
 				"iat" => time(),
 				"exp" => time() + (90000)
 			);	
@@ -87,6 +89,7 @@ class JwtAuth
 				"email" => $decoded->email,
 				"nombre" => $decoded->nombre,
 				"idsesion" => $decoded->idsesion,
+				"rol" => $decoded->rol,
 				"iat" => time(),
 				"exp" => time() + (90000)
 			);	
@@ -144,13 +147,6 @@ class JwtAuth
 			return null;
 		}
 
-		/*$answer = array(
-			"status" => "Success",
-			"code" => 200,
-			"message" => "Bien de momento"
-		);
-
-		return "Sin problemas por aqui";*/
 	}
 
     /*
