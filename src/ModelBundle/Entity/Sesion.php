@@ -35,6 +35,12 @@ class Sesion
      */
     private $fin;
 
+    /**
+     * @var int
+     *
+     * @ORM\Column(name="usuario", type="integer")
+     */
+    private $usuario;    
 
     /**
      * Get id
@@ -94,25 +100,14 @@ class Sesion
         return $this->fin;
     }
 
-
-    //ASOCIACIONES
-
-    //Asociación entre Sesion y Usuario    
-
-    /**
-     * @ORM\ManyToOne(targetEntity="Usuario", inversedBy="sesiones")
-     * @ORM\JoinColumn(name="usuario_id", referencedColumnName="id")
-     */
-    private $usuario;
-
     /**
      * Set usuario
      *
-     * @param \ModelBundle\Entity\Usuario $usuario
+     * @param int $usuario
      *
      * @return Sesion
      */
-    public function setUsuario(\ModelBundle\Entity\Usuario $usuario = null)
+    public function setUsuario($usuario)
     {
         $this->usuario = $usuario;
 
@@ -122,7 +117,7 @@ class Sesion
     /**
      * Get usuario
      *
-     * @return \ModelBundle\Entity\Usuario
+     * @return int
      */
     public function getUsuario()
     {

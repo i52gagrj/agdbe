@@ -36,7 +36,7 @@ class JwtAuth
 			$sesion = new Sesion;
 			$sesion->setInicio(new \Datetime("now"));
 			$sesion->setFin(new \Datetime("+15 minutes"));
-			$sesion->setUsuario($user);
+			$sesion->setUsuario($user->getId());
 
 			$this->manager->persist($sesion);	
 			$this->manager->flush();

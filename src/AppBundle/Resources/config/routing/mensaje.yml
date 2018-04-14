@@ -7,3 +7,8 @@ mensaje_todo:
     path: /todo
     defaults: { _controller: "AppBundle:Mensaje:todo" }
     methods: POST    
+
+mensaje_user:
+    path: /messageuser
+    defaults: { _controller: "AppBundle:Mensaje:messageuser" }
+    methods: POST        

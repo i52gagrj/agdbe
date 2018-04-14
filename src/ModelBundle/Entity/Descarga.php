@@ -28,6 +28,19 @@ class Descarga
      */
     private $fechahora;
 
+    /**
+     * @var int
+     *
+     * @ORM\Column(name="usuario", type="integer")
+     */
+    private $usuario;  
+
+    /**
+     * @var int
+     *
+     * @ORM\Column(name="modelo", type="integer")
+     */
+    private $modelo;      
 
     /**
      * Get id
@@ -64,30 +77,14 @@ class Descarga
     }
 
 
-    //ASOCIACIONES
-
-    ///RELACIONES CON USUARIO Y MODELO///
-
-    /**
-     * @ORM\ManyToOne(targetEntity="Usuario", inversedBy="descargas")
-     * @ORM\JoinColumn(name="usuario_id", referencedColumnName="id")
-     */
-    private $usuario;
-
-    /**
-     * @ORM\ManyToOne(targetEntity="Modelo", inversedBy="descargas")
-     * @ORM\JoinColumn(name="modelo_id", referencedColumnName="id")
-     */
-    private $modelo;  
-
     /**
      * Set usuario
      *
-     * @param \ModelBundle\Entity\Usuario $usuario
+     * @param int $usuario
      *
      * @return Descarga
      */
-    public function setUsuario(\ModelBundle\Entity\Usuario $usuario = null)
+    public function setUsuario($usuario)
     {
         $this->usuario = $usuario;
 
@@ -97,21 +94,21 @@ class Descarga
     /**
      * Get usuario
      *
-     * @return \ModelBundle\Entity\Usuario
+     * @return int
      */
     public function getUsuario()
     {
         return $this->usuario;
-    }
+    }    
 
     /**
      * Set modelo
      *
-     * @param \ModelBundle\Entity\Modelo $modelo
+     * @param int $modelo
      *
      * @return Descarga
      */
-    public function setModelo(\ModelBundle\Entity\Modelo $modelo = null)
+    public function setModelo($modelo)
     {
         $this->modelo = $modelo;
 
@@ -121,10 +118,10 @@ class Descarga
     /**
      * Get modelo
      *
-     * @return \ModelBundle\Entity\Modelo
+     * @return int
      */
     public function getModelo()
     {
         return $this->modelo;
-    }
+    }    
 }

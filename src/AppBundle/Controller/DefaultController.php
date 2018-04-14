@@ -83,12 +83,14 @@ class DefaultController extends Controller
 
             $jwt_auth = $this->get(JwtAuth::class);                            
             $identity = $jwt_auth->decodeToken($petition);    
+
+            $data = $identity;
             
-            $data = array(
+            /*$data = array(
                 'status' => 'success',
                 'code' => 200,
                 'data' => $identity
-            );            
+            );*/            
         }
      
         $mandar = new Response(json_encode($data));
@@ -105,15 +107,15 @@ class DefaultController extends Controller
         $newtoken = $jwt_auth->checkToken($token);
         if($token && $newtoken){                
             $datos = $jwt_auth->decodeToken($token);   
-            $usuario = $jwt_auth->returnUser($datos->sub);         
+            $usuario = $jwt_auth->returnUser($datos->sub);        
                 
             //echo $datos->sub;
             //die();            
 
             $json = array(
                 'status' => 'success', 
-                'users' => $usuario,
-                'token' => $newtoken
+                'users' => $usuario/*,
+                'token' => $newtoken*/
             );
         }
         else 

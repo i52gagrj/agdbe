@@ -50,6 +50,13 @@ class Modelo
     private $ejercicio;
 
     /**
+     * @var \DateTime
+     *
+     * @ORM\Column(name="fechahora", type="datetime")
+     */
+    private $fechahora;    
+
+    /**
      * @var string
      *
      * @ORM\Column(name="tipo", type="string", length=6)
@@ -70,6 +77,12 @@ class Modelo
      */
     private $ruta;    
 
+    /**
+     * @var int
+     *
+     * @ORM\Column(name="usuario", type="integer")
+     */
+    private $usuario;       
 
     /**
      * Get id
@@ -178,6 +191,30 @@ class Modelo
     }
 
     /**
+     * Set fechahora
+     *
+     * @param \DateTime $fechahora
+     *
+     * @return Documento
+     */
+    public function setFechahora($fechahora)
+    {
+        $this->fechahora = $fechahora;
+
+        return $this;
+    }
+
+    /**
+     * Get fechahora
+     *
+     * @return \DateTime
+     */
+    public function getFechahora()
+    {
+        return $this->fechahora;
+    }
+
+    /**
      * Set tipo
      *
      * @param string $tipo
@@ -200,30 +237,6 @@ class Modelo
     {
         return $this->tipo;
     }
-
-    // /**
-    // * Set contenido
-    // *
-    // * @param string $contenido
-    // *
-    // * @return Modelo
-    // */
-    //public function setContenido($contenido)
-    //{
-    //    $this->contenido = $contenido;
-    // 
-    //    return $this;
-    //}
-
-    // /**
-    //  * Get contenido
-    //  *
-    //  * @return string
-    //  */
-    // public function getContenido()
-    // {
-    //     return $this->contenido;
-    // }
 
     /**
      * Set ruta
@@ -249,36 +262,14 @@ class Modelo
         return $this->ruta;
     }
 
-    //ASOCIACIONES
-
-    ///RELACIONES CON USUARIOS///
-
-    /**
-     * @ORM\ManyToOne(targetEntity="Usuario", inversedBy="modelos")
-     * @ORM\JoinColumn(name="usuario_id", referencedColumnName="id")
-     */
-    private $usuario;
-
-    ///RELACIONES CON DESCARGAS///
-
-    /**
-     * @ORM\OneToMany(targetEntity="Descarga", mappedBy="modelo")     
-     */
-    protected $descargas;
- 
-    public function __construct()
-    {        
-        $this->descargas = new ArrayCollection();
-    } 
-
     /**
      * Set usuario
      *
-     * @param \ModelBundle\Entity\Usuario $usuario
+     * @param int $usuario
      *
      * @return Modelo
      */
-    public function setUsuario(\ModelBundle\Entity\Usuario $usuario = null)
+    public function setUsuario($usuario)
     {
         $this->usuario = $usuario;
 
@@ -288,44 +279,11 @@ class Modelo
     /**
      * Get usuario
      *
-     * @return \ModelBundle\Entity\Usuario
+     * @return int
      */
     public function getUsuario()
     {
         return $this->usuario;
-    }
+    }    
 
-    /**
-     * Add descarga
-     *
-     * @param \ModelBundle\Entity\Descarga $descarga
-     *
-     * @return Modelo
-     */
-    public function addDescarga(\ModelBundle\Entity\Descarga $descarga)
-    {
-        $this->descargas[] = $descarga;
-
-        return $this;
-    }
-
-    /**
-     * Remove descarga
-     *
-     * @param \ModelBundle\Entity\Descarga $descarga
-     */
-    public function removeDescarga(\ModelBundle\Entity\Descarga $descarga)
-    {
-        $this->descargas->removeElement($descarga);
-    }
-
-    /**
-     * Get descargas
-     *
-     * @return \Doctrine\Common\Collections\Collection
-     */
-    public function getDescargas()
-    {
-        return $this->descargas;
-    }
 }

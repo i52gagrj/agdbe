@@ -14,16 +14,64 @@ use AppBundle\Services\JwtAuth;
 class SesionController extends Controller {
 
 	public function newAction(Request $request) {
+		//NO NECESARIA. La sesión se crea y almacena al realizarse el login
 		echo "Hola mundo desde el controlador de Sesion";
 		die();
-		// De entrada esto se encargaria de crear la sesión. Pero no se si llamarlo desde aquí, o
-		//llamarlo desde el signup
 	}	
 
-	/*
-	public function todoclienteAction(Request $request) {
-		// Devolver todas las sesiones de un determinado cliente, que se pasará como parámetro		
+	public function allsessionsAction(Request $request) {
+        $helpers = $this->get(Helpers::class);
+        $jwt_auth = $this->get(JwtAuth::class);
+
+		$token = $request->get('authorization', null);
+		$id = $request->get('id', null);
+		$authCheck = $jwt_auth->checkToken($token);
+
+		$data = array(
+			'status' => 'error',
+			'code' => 400,
+			'msg' => 'Authorization not valid !!'
+		); 
+		
+        if($authCheck){		
+			$decode = $jwt_auth->decodeToken($token);
+			//$identity = $jwt_auth->returnUser($decode->sub);				
+
+			/*
+			Buscar los mensajes enviados y recibidos por el usuario identificado, ordenados por fecha
+			*/
+			$em = $this->getDoctrine()->getManager();			
+
+			$dql = "SELECT s FROM ModelBundle:Sesion s "
+                ."WHERE s.usuario = $id "
+				."ORDER BY s.inicio ASC";
+
+			$query = $em->createQuery($dql);
+	
+			$sesiones = $query->getResult();
+
+			//FALTARIA PAGINARLOS
+
+			if($sesiones){	
+				$data = array(
+					'status' => 'success',
+					'code' => 200, 
+					'token' => $authCheck,                   
+					'sesiones' => $sesiones
+				);    
+			}else{
+				$data = array(
+					'status' => 'success',
+					'code' => 200, 
+					'token' => $authCheck,                                       
+					'sesiones' => "No hay sesiones"
+				);    				
+			}			
+
+		}
+
+		return $helpers->json($data);		
+
 	}
-	*/
 
 }

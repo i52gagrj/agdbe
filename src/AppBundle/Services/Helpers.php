@@ -1,7 +1,6 @@
 <?php
 namespace AppBundle\Services;
 
-//use ModelBundle\Entity\Usuario;
 use Symfony\Component\Serializer\Serializer;
 use Symfony\Component\Serializer\Encoder\XmlEncoder;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;

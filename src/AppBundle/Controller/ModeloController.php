@@ -16,55 +16,84 @@ class ModeloController extends Controller {
 	public function newAction(Request $request) {
         $helpers = $this->get(Helpers::class);
 		$jwt_auth = $this->get(JwtAuth::class);
+
+		/* NOTA
+		Hay que añadir una condición para que solo puedan añadir modelos los usuarios clientes, y no lo puedan hacer los administradores
+		En el caso de modelos, será simetrico: solo podrán añadirlos los administradores, y no los clientes.
+		*/
 		
 		// Requerir autorización
 
-        $token = $request->get('authorization', null);
+
+        $token = $request->get('authorization');
         $authCheck = $jwt_auth->checkToken($token);
 
         $data = array(
             'status' => 'error',
             'code' => 400,
-            'msg' => 'Document not created !!'
+            'msg' => 'Model not created !!'
         );         
 
         if($authCheck)
-        {        	
-			//Requerir fichero
+        {        			
+			// Recuperar la identidad del usuario
+			$decoded = $jwt_auth->decodeToken($token);
+			$identity = $jwt_auth->returnUser($decoded->sub);
 
+			// Requerir los datos json enviados
 	        $json = $request->get('json', null);
 			$params = json_decode($json);
+
+			// Requerir fichero
+			$uploadedFichero = $request->files->get('file');			
 			
-			//$rutaBase = '../archivos';
+			if($uploadedFichero)
+			{														
+				/**
+				  * @var UploadedFile $fichero;
+				  */ 				
+				$fichero = $uploadedFichero;
+				$tipo = $fichero->guessExtension();
+				$nombrefichero=md5(uniqid()).'.'.$tipo;
+				$fichero->move($this->getParameter('directorio_modelos'),$nombrefichero);				
+				$modelo = new modelo();
+				$modelo->setRuta($nombrefichero);
+				$modelo->setDescripcion($params->descripcion);
+				$modelo->setCodigo($params->codigo);
+				$modelo->setTrimestre($params->trimestre);
+				$modelo->setEjercicio($params->ejercicio);
+				$modelo->setTipo($tipo);				
+				//$modelo->setFechahora(new \Datetime("now"));
+				$modelo->setUsuario($identity);       
 
-	        if($json != null)
-	        {        	
+				$em = $this->getDoctrine()->getManager();
+				$em->persist($modelo);
+				$em->flush();   
 				
-	        	$fechahora = new \Datetime("now");
-				$descripcion = (isset($params->descripcion)) ? $params->descripcion : null;
+				$datosmodelo = array(
+					'Id' => $modelo->getId(),
+					'Descripcion' => $modelo->getDescripcion(),					
+					'Tipo' => $modelo->getTipo()
+				);
 				
-
-	        	$tipo = (isset($params->tipo)) ? $params->tipo : null;
-	        	$ruta= (isset($params->ruta)) ? $params->ruta : null;
-	        }
-
-        	$documento = new Documento();
-        	$documento->setDescripcion($descripcion);
-        	$documento->setTipo($tipo);
-        	$documento->setFechahora($fechahora);
-        	$documento->setRuta($ruta);
-
-        	$em = $this->getDoctrine()->getManager();
-        	$em->persist($documento);
-        	$em->flush();        			
-
-		    $data = array(
-		        'status' => 'Success',
-		        'code' => 200,
-		        'msg' => 'New Document created !!', 
-		        'authcheck' => $authCheck,
-		        'documento' => $documento
-		    );    
+				$data = array(
+					'status' => 'Success',
+					'code' => 200,
+					'msg' => 'New Document created!!', 					
+					'token' => $authCheck,
+					'modelo' => $datosmodelo
+				);    
+			}
+			else
+			{
+				$data = array(
+					'status' => 'error',
+					'code' => 400,
+					'msg' => 'File not send', 
+					'descripcion' => $params->descripcion,
+					'token' => $authCheck
+				); 				
+			}
 		       		
         }
 
@@ -73,17 +102,18 @@ class ModeloController extends Controller {
 	        $data = array(
 	            'status' => 'error',
 	            'code' => 400,
-	            'msg' => 'Authorization not valid !!', 
-		        'authcheck' => $authCheck
+	            'msg' => 'Authorization not valid !!',
+				'authcheck' => $authCheck,
+				'token' => $token
 	        ); 
         }
         
-		return $helpers->json($data);	
+		return $helpers->json($data);
 			
 	}	
 	
 	public function listallAction(Request $request) {
-		// Devuelve el listado de todos los documentos de un cliente
+		// Devuelve el listado de todos los modelos de un cliente
 		// La idea es que devuelva la descripción y los datos, no la ruta!!
 
 		/*
@@ -103,17 +133,17 @@ class ModeloController extends Controller {
 
         if($authCheck)
         {   
-        	$id=$request->get('iddocumento', null);
+        	$id=$request->get('idmodelo', null);
         	$em = $this->getDoctrine()->getManager();
-        	$documento = $em->getRepository('ModelBundle:Documento')->find($id);
+        	$modelo = $em->getRepository('ModelBundle:modelo')->find($id);
 
-        	if($documento) {
+        	if($modelo) {
 			    $data = array(
 			        'status' => 'Success',
 			        'code' => 200,
 			        'msg' => 'Document recovered !!', 
 			        'authcheck' => $authCheck,
-			        'documento' => $documento
+			        'modelo' => $modelo
 			    );            		
         	}
 
@@ -140,17 +170,17 @@ class ModeloController extends Controller {
 
 		*/
 
-		echo "Hola mundo desde el controlador de listar Documentos";
+		echo "Hola mundo desde el controlador de listar modelos";
 		die();		
 	}
 	
 
 	 
 	public function returnoneAction(Request $request) {		
-		// Devuelve la ruta de un documento por la id
+		// Devuelve la ruta de un modelo por la id
 		/*
 		Recuperamos la autorización
-		De ser correcta, se busca el documento por la id pasada
+		De ser correcta, se busca el modelo por la id pasada
 		Si está, se devuelve este
 		Si no está, se devuelve un mensaje de no encontrado
 		De ser incorrecta la autorización, se devuelve un mensaje de error en la misma
@@ -173,17 +203,17 @@ class ModeloController extends Controller {
 
         if($authCheck)
         {   
-        	$id=$request->get('iddocumento', null);
+        	$id=$request->get('idmodelo', null);
         	$em = $this->getDoctrine()->getManager();
-        	$documento = $em->getRepository('ModelBundle:Documento')->find($id);
+        	$modelo = $em->getRepository('ModelBundle:modelo')->find($id);
 
-        	if($documento) {
+        	if($modelo) {
 			    $data = array(
 			        'status' => 'Success',
 			        'code' => 200,
 			        'msg' => 'Document recovered !!', 
 			        'authcheck' => $authCheck,
-			        'documento' => $documento
+			        'modelo' => $modelo
 			    );            		
         	}
 
@@ -211,7 +241,7 @@ class ModeloController extends Controller {
 		*/		
 
 
-		echo "Hola mundo desde el controlador de devolver un Documento";
+		echo "Hola mundo desde el controlador de devolver un modelo";
 		die();		
 	}	
 

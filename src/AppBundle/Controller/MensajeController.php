@@ -5,7 +5,9 @@ namespace AppBundle\Controller;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Validator\Constraints as Assert;
 use ModelBundle\Entity\Mensaje;
 use AppBundle\Services\Helpers;
@@ -47,8 +49,8 @@ class MensajeController extends Controller {
 					// Salvar los datos en la entidad mensaje
 					$mensaje->setTexto($texto);				
 					$mensaje->setFechahora($creacion);
-					$mensaje->setEmisor($identity);
-					$mensaje->setReceptor($destino);
+					$mensaje->setEmisor($origen->getId());
+					$mensaje->setReceptor($destino->getId());
 
 					// Crear conexion a base de datos
 					$em = $this->getDoctrine()->getManager();			
@@ -60,8 +62,8 @@ class MensajeController extends Controller {
 					$data = array(
 						'status' => 'success',
 						'code' => 200,
-						'msg' => 'Message stored',
-						'token' => $authCheck
+						'token' => $authCheck,
+						'msg' => 'Message stored'
 					); 
 
 				}
@@ -70,8 +72,8 @@ class MensajeController extends Controller {
 					$data = array(
 						'status' => 'error',
 						'code' => 400,
-						'msg' => 'Wrong data',
-						'token' => $authCheck
+						'token' => $authCheck,
+						'msg' => 'Wrong data'
 					); 					
 				}
 
@@ -81,28 +83,122 @@ class MensajeController extends Controller {
 				$data = array(
 					'status' => 'error',
 					'code' => 400,
-					'msg' => 'Params failed',
-					'token' => $authCheck
+					'token' => $authCheck,
+					'msg' => 'Params failed'
 				); 
 			}
 
-		}
-		else
-		{
-			$data = array(
-				'status' => 'error',
-				'code' => 400,
-				'msg' => 'Authorization not valid !!',
-				'token' => $authCheck
-			); 
-		}	
+		}		
 
 		return $helpers->json($data);		
 	}	
 
 	public function todoAction(Request $request) {
-		//Mostrar todos los mensajes de un usuario, que se pasa como parametro
-		echo "Hola mundo desde el envio de todos los mensajes";
-		die();		
+        $helpers = $this->get(Helpers::class);
+        $jwt_auth = $this->get(JwtAuth::class);
+
+        $token = $request->get('authorization', null);
+		$authCheck = $jwt_auth->checkToken($token);
+
+		$data = array(
+			'status' => 'error',
+			'code' => 400,
+			'msg' => 'Authorization not valid !!'
+		); 
+		
+        if($authCheck){		
+			$decode = $jwt_auth->decodeToken($token);
+			$identity = $jwt_auth->returnUser($decode->sub);				
+
+			/*
+			Buscar los mensajes enviados y recibidos por el usuario identificado, ordenados por fecha
+			*/
+			$em = $this->getDoctrine()->getManager();			
+
+			$dql = "SELECT m FROM ModelBundle:Mensaje m "
+                ."WHERE m.emisor = $decode->sub OR m.receptor = $decode->sub "
+				."ORDER BY m.fechahora ASC";
+
+			$query = $em->createQuery($dql);
+	
+			$mensajes = $query->getResult();
+
+			//FALTARIA PAGINARLOS
+
+			if($mensajes){	
+				$data = array(
+					'status' => 'success',
+					'code' => 200, 
+					'token' => $authCheck,                   
+					'mensajes' => $mensajes
+				);    
+			}else{
+				$data = array(
+					'status' => 'success',
+					'code' => 200, 
+					'token' => $authCheck,                                       
+					'mensajes' => "No hay mensajes"
+				);    				
+			}			
+
+		}
+
+		return $helpers->json($data);		
+
 	}	
+
+	public function messageuserAction(Request $request) {
+        $helpers = $this->get(Helpers::class);
+        $jwt_auth = $this->get(JwtAuth::class);
+
+		$token = $request->get('authorization', null);
+		$id = $request->get('id', null);
+		$authCheck = $jwt_auth->checkToken($token);
+
+		$data = array(
+			'status' => 'error',
+			'code' => 400,
+			'msg' => 'Authorization not valid !!'
+		); 
+		
+        if($authCheck){		
+			$decode = $jwt_auth->decodeToken($token);
+			$identity = $jwt_auth->returnUser($decode->sub);				
+
+			/*
+			Buscar los mensajes enviados y recibidos por el usuario identificado, ordenados por fecha
+			*/
+			$em = $this->getDoctrine()->getManager();			
+
+			$dql = "SELECT m FROM ModelBundle:Mensaje m "
+                ."WHERE m.emisor = $id OR m.receptor = $id "
+				."ORDER BY m.fechahora ASC";
+
+			$query = $em->createQuery($dql);
+	
+			$mensajes = $query->getResult();
+
+			//FALTARIA PAGINARLOS
+
+			if($mensajes){	
+				$data = array(
+					'status' => 'success',
+					'code' => 200, 
+					'token' => $authCheck,                   
+					'mensajes' => $mensajes
+				);    
+			}else{
+				$data = array(
+					'status' => 'success',
+					'code' => 200, 
+					'token' => $authCheck,                                       
+					'mensajes' => "No hay mensajes"
+				);    				
+			}			
+
+		}
+
+		return $helpers->json($data);		
+
+	}		
 }

@@ -42,13 +42,6 @@ class Documento
      */
     private $tipo;
 
-    // /**
-    // * @var string
-    // *
-    // * @ORM\Column(name="contenido", type="blob")
-    // */
-    //private $contenido;
-
     /**
      * @var string
      *
@@ -56,6 +49,12 @@ class Documento
      */
     private $ruta;    
 
+    /**
+     * @var int
+     *
+     * @ORM\Column(name="usuario", type="integer")
+     */
+    private $usuario;    
 
     /**
      * Get id
@@ -139,36 +138,12 @@ class Documento
         return $this->tipo;
     }
 
-    // /**
-    // * Set contenido
-    // *
-    // * @param string $contenido
-    // *
-    // * @return Modelo
-    // */
-    //public function setContenido($contenido)
-    //{
-    //    $this->contenido = $contenido;
-    // 
-    //    return $this;
-    //}
-
-    // /**
-    //  * Get contenido
-    //  *
-    //  * @return string
-    //  */
-    // public function getContenido()
-    // {
-    //     return $this->contenido;
-    // }
-
     /**
      * Set ruta
      *
      * @param string $ruta
      *
-     * @return Modelo
+     * @return Documento
      */
     public function setRuta($ruta)
     {
@@ -187,26 +162,14 @@ class Documento
         return $this->ruta;
     }
 
-
-    //ASOCIACIONES
-
-    //Asociación entre Documento y Usuario
-
-    /**
-     * @ORM\ManyToOne(targetEntity="Usuario", inversedBy="documentos")
-     * @ORM\JoinColumn(name="usuario_id", referencedColumnName="id")
-     */
-    private $usuario;
-    
-
     /**
      * Set usuario
      *
-     * @param \ModelBundle\Entity\Usuario $usuario
+     * @param int $usuario
      *
      * @return Documento
      */
-    public function setUsuario(\ModelBundle\Entity\Usuario $usuario = null)
+    public function setUsuario($usuario)
     {
         $this->usuario = $usuario;
 
@@ -216,7 +179,7 @@ class Documento
     /**
      * Get usuario
      *
-     * @return \ModelBundle\Entity\Usuario
+     * @return int
      */
     public function getUsuario()
     {

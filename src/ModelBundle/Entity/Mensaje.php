@@ -35,6 +35,20 @@ class Mensaje
      */
     private $fechahora;
 
+    /**
+     * @var int
+     *
+     * @ORM\Column(name="emisor", type="integer")
+     */
+    private $emisor;
+
+    /**
+     * @var int
+     *
+     * @ORM\Column(name="receptor", type="integer")
+     */
+    private $receptor;    
+
 
     /**
      * Get id
@@ -94,28 +108,14 @@ class Mensaje
         return $this->fechahora;
     }
 
-    //ASOCIACIONES
-
-    /**
-     * @ORM\ManyToOne(targetEntity="Usuario", inversedBy="mensajesemitidos")
-     * @ORM\JoinColumn(name="emisor", referencedColumnName="id")
-     */
-    private $emisor;
-
-    /**
-     * @ORM\ManyToOne(targetEntity="Usuario", inversedBy="mensajesrecibidos")
-     * @ORM\JoinColumn(name="receptor", referencedColumnName="id")
-     */
-    private $receptor; 
-
     /**
      * Set emisor
      *
-     * @param \ModelBundle\Entity\Usuario $emisor
+     * @param \int $emisor
      *
      * @return Mensaje
      */
-    public function setEmisor(\ModelBundle\Entity\Usuario $emisor = null)
+    public function setEmisor($emisor)
     {
         $this->emisor = $emisor;
 
@@ -125,21 +125,21 @@ class Mensaje
     /**
      * Get emisor
      *
-     * @return \ModelBundle\Entity\Usuario
+     * @return \int
      */
     public function getEmisor()
     {
         return $this->emisor;
-    }
+    }    
 
     /**
      * Set receptor
      *
-     * @param \ModelBundle\Entity\Usuario $receptor
+     * @param \int $receptor
      *
      * @return Mensaje
      */
-    public function setReceptor(\ModelBundle\Entity\Usuario $receptor = null)
+    public function setReceptor($receptor)
     {
         $this->receptor = $receptor;
 
@@ -147,12 +147,74 @@ class Mensaje
     }
 
     /**
-     * Get receptor
+     * Get emisor
      *
-     * @return \ModelBundle\Entity\Usuario
+     * @return \int
      */
     public function getReceptor()
     {
         return $this->receptor;
-    }
+    }      
+
+    //ASOCIACIONES
+
+    // /**
+    //  * @ORM\ManyToOne(targetEntity="Usuario", inversedBy="mensajesemitidos")
+    //  * @ORM\JoinColumn(name="emisor", referencedColumnName="id")
+    //  */
+    // private $emisor;
+
+    // /**
+    //  * @ORM\ManyToOne(targetEntity="Usuario", inversedBy="mensajesrecibidos")
+    //  * @ORM\JoinColumn(name="receptor", referencedColumnName="id")
+    //  */
+    // private $receptor; 
+
+    // /**
+    //  * Set emisor
+    //  *
+    //  * @param \ModelBundle\Entity\Usuario $emisor
+    //  *
+    //  * @return Mensaje
+    //  */
+    // public function setEmisor(\ModelBundle\Entity\Usuario $emisor = null)
+    // {
+    //     $this->emisor = $emisor;
+
+    //     return $this;
+    // }
+
+    // /**
+    //  * Get emisor
+    //  *
+    //  * @return \ModelBundle\Entity\Usuario
+    //  */
+    // public function getEmisor()
+    // {
+    //     return $this->emisor;
+    // }
+
+    // /**
+    //  * Set receptor
+    //  *
+    //  * @param \ModelBundle\Entity\Usuario $receptor
+    //  *
+    //  * @return Mensaje
+    //  */
+    // public function setReceptor(\ModelBundle\Entity\Usuario $receptor = null)
+    // {
+    //     $this->receptor = $receptor;
+
+    //     return $this;
+    // }
+
+    // /**
+    //  * Get receptor
+    //  *
+    //  * @return \ModelBundle\Entity\Usuario
+    //  */
+    // public function getReceptor()
+    // {
+    //     return $this->receptor;
+    // }
 }

@@ -2,12 +2,6 @@
 
 namespace AppBundle\Controller;
 
-/*
-header("Access-Control-Allow-Origin: *");
-header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-header('Access-Control-Allow-Headers','X-Requested-With, content-type');
-*/
-
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\PropertyAccess\PropertyAccess;
@@ -23,7 +17,7 @@ use AppBundle\Services\JwtAuth;
 
 class DocumentoController extends Controller {
 
-	public function pruebaAction(Request $request) {
+	/*public function pruebaAction(Request $request) {
         $helpers = $this->get(Helpers::class);
 		$jwt_auth = $this->get(JwtAuth::class);
 
@@ -37,9 +31,9 @@ class DocumentoController extends Controller {
 
 		if($uploadedFichero)
 		{			
-			/**
-			  * @var UploadedFile $fichero;
-			  */ 				
+			// /**
+			//   * @var UploadedFile $fichero;
+			//  */ /*				
 			$fichero = $uploadedFichero;
 			$nombrefichero=md5(uniqid()).'.'.$fichero->guessExtension();
 			$fichero->move($this->getParameter('directorio_documentos'),$nombrefichero);
@@ -76,7 +70,7 @@ class DocumentoController extends Controller {
 		return new JsonResponse($data);
 		//return $helpers->json($data);
 
-	}
+	}*/
 
 	public function newAction(Request $request) {
         $helpers = $this->get(Helpers::class);
@@ -96,7 +90,7 @@ class DocumentoController extends Controller {
         $data = array(
             'status' => 'error',
             'code' => 400,
-            'msg' => 'Document not created !!'
+            'msg' => 'Authorization not valid !!'
         );         
 
         if($authCheck)
@@ -141,9 +135,9 @@ class DocumentoController extends Controller {
 				
 				$data = array(
 					'status' => 'Success',
-					'code' => 200,
-					'msg' => 'New Document created!!', 					
+					'code' => 200, 					
 					'token' => $authCheck,
+					'msg' => 'New Document created!!',
 					'documento' => $datosdocumento
 				);    
 			}
@@ -152,23 +146,11 @@ class DocumentoController extends Controller {
 				$data = array(
 					'status' => 'error',
 					'code' => 400,
-					'msg' => 'File not send', 
-					'descripcion' => $params->descripcion,
-					'token' => $authCheck
+					'token' => $authCheck,
+					'msg' => 'File not send'
 				); 				
 			}
 		       		
-        }
-
-        else 
-        {    		
-	        $data = array(
-	            'status' => 'error',
-	            'code' => 400,
-	            'msg' => 'Authorization not valid !!',
-				'authcheck' => $authCheck,
-				'token' => $token
-	        ); 
         }
         
 		return $helpers->json($data);
@@ -184,63 +166,58 @@ class DocumentoController extends Controller {
 		// Esto serviria para que los administradores pasen el id de un usario y recuperen sus documentos
 		// Si no se pasa, se recupera el usario del token
 		// Esta manera servirá para que los usuarios recuperen el listado de sus documentos
-
-		/*
-
-    	$helpers = $this->get(Helpers::class);
+		
+        $helpers = $this->get(Helpers::class);
         $jwt_auth = $this->get(JwtAuth::class);
 
         $token = $request->get('authorization', null);
+		$authCheck = $jwt_auth->checkToken($token);
+		$id = $request->get('id', null);
 
-        $authCheck = $jwt_auth->checkToken($token);
-
-        $data = array(
-            'status' => 'error',
-            'code' => 400,
-            'msg' => 'Document not created !!'
-        );         
-
-        if($authCheck)
-        {   
-        	$id=$request->get('iddocumento', null);
-        	$em = $this->getDoctrine()->getManager();
-        	$documento = $em->getRepository('ModelBundle:Documento')->find($id);
-
-        	if($documento) {
-			    $data = array(
-			        'status' => 'Success',
-			        'code' => 200,
-			        'msg' => 'Document recovered !!', 
-			        'authcheck' => $authCheck,
-			        'documento' => $documento
-			    );            		
-        	}
-
-        	else {
-			    $data = array(
-			        'status' => 'error',
-			        'code' => 400,
-			        'msg' => 'Document not exist !!', 
-			        'authcheck' => $authCheck
-			    );            		        		
-        	}    			          	
-        }     			
+		$data = array(
+			'status' => 'error',
+			'code' => 400,
+			'msg' => 'Authorization not valid !!'
+		); 
 		
-		else
-		{
-	        $data = array(
-    	        'status' => 'error',
-        	    'code' => 400,
-            	'msg' => 'Authorization not valid'
-        	);         
-		}	
+        if($authCheck){		
+			//$decode = $jwt_auth->decodeToken($token);
+			//$identity = $jwt_auth->returnUser($decode->sub);				
 
-		return $helpers->json($data);
+			/*
+			Buscar los documentos creados por el usuario indicado, ordenados por fecha
+			*/
+			$em = $this->getDoctrine()->getManager();			
 
-		*/
+			$dql = "SELECT d FROM ModelBundle:Documento d "
+                ."WHERE d.usuario = $id"
+				."ORDER BY d.fechahora ASC";
 
-		echo "Hola mundo desde el controlador de listar Documentos";
-		die();		
+			$query = $em->createQuery($dql);
+	
+			$documentos = $query->getResult();
+
+			//FALTARIA PAGINARLOS
+
+			if($documentos){	
+				$data = array(
+					'status' => 'success',
+					'code' => 200,
+					'token' => $authCheck,                    
+					'documentos' => $documentos
+				);    
+			}else{
+				$data = array(
+					'status' => 'success',
+					'code' => 200,
+					'token' => $authCheck,                    
+					'documentos' => "No hay documentos"
+				);    				
+			}			
+
+		}
+
+		return $helpers->json($data);	
 	}
 	
 
