@@ -116,131 +116,67 @@ class ModeloController extends Controller {
 		// Devuelve el listado de todos los modelos de un cliente
 		// La idea es que devuelva la descripción y los datos, no la ruta!!
 
-		/*
-
-    	$helpers = $this->get(Helpers::class);
+		// Si se pasa el usuario como parametro, se devolverán los modelos del usuario (descripción y datos, no ruta)
+		// Esto serviria para que los administradores pasen el id de un usario y recuperen sus modelos
+		// Si no se pasa, se recupera el usario del token
+		// Esta manera servirá para que los usuarios recuperen el listado de sus modelos
+		
+        $helpers = $this->get(Helpers::class);
         $jwt_auth = $this->get(JwtAuth::class);
 
         $token = $request->get('authorization', null);
+		$authCheck = $jwt_auth->checkToken($token);
+		$id = $request->get('id', null);
 
-        $authCheck = $jwt_auth->checkToken($token);
-
-        $data = array(
-            'status' => 'error',
-            'code' => 400,
-            'msg' => 'Document not created !!'
-        );         
-
-        if($authCheck)
-        {   
-        	$id=$request->get('idmodelo', null);
-        	$em = $this->getDoctrine()->getManager();
-        	$modelo = $em->getRepository('ModelBundle:modelo')->find($id);
-
-        	if($modelo) {
-			    $data = array(
-			        'status' => 'Success',
-			        'code' => 200,
-			        'msg' => 'Document recovered !!', 
-			        'authcheck' => $authCheck,
-			        'modelo' => $modelo
-			    );            		
-        	}
-
-        	else {
-			    $data = array(
-			        'status' => 'error',
-			        'code' => 400,
-			        'msg' => 'Document not exist !!', 
-			        'authcheck' => $authCheck
-			    );            		        		
-        	}    			          	
-        }     			
+		$data = array(
+			'status' => 'error',
+			'code' => 400,
+			'msg' => 'Authorization not valid !!'
+		); 
 		
-		else
-		{
-	        $data = array(
-    	        'status' => 'error',
-        	    'code' => 400,
-            	'msg' => 'Authorization not valid'
-        	);         
-		}	
+        if($authCheck){		
+			//$decode = $jwt_auth->decodeToken($token);
+			//$identity = $jwt_auth->returnUser($decode->sub);				
 
-		return $helpers->json($data);
+			/*
+			Buscar los modelos asignado al usuario indicado, ordenados por fecha
+			*/
+			$em = $this->getDoctrine()->getManager();			
 
-		*/
+			$dql = "SELECT m FROM ModelBundle:Modelo m "
+                ."WHERE m.usuario = $id"
+				."ORDER BY m.fechahora ASC";
 
-		echo "Hola mundo desde el controlador de listar modelos";
-		die();		
+			$query = $em->createQuery($dql);
+	
+			$modelos = $query->getResult();
+
+			//FALTARIA PAGINARLOS
+
+			if($modelos){	
+				$data = array(
+					'status' => 'success',
+					'code' => 200,
+					'token' => $authCheck,                    
+					'modelos' => $modelos
+				);    
+			}else{
+				$data = array(
+					'status' => 'success',
+					'code' => 200,
+					'token' => $authCheck,                    
+					'modelos' => "No hay modelos"
+				);    				
+			}			
+
+		}
+
+		return $helpers->json($data);	
 	}
 	
 
 	 
 	public function returnoneAction(Request $request) {		
-		// Devuelve la ruta de un modelo por la id
-		/*
-		Recuperamos la autorización
-		De ser correcta, se busca el modelo por la id pasada
-		Si está, se devuelve este
-		Si no está, se devuelve un mensaje de no encontrado
-		De ser incorrecta la autorización, se devuelve un mensaje de error en la misma
-	 	*/		
-
-		/*
-
-    	$helpers = $this->get(Helpers::class);
-        $jwt_auth = $this->get(JwtAuth::class);
-
-        $token = $request->get('authorization', null);
-
-        $authCheck = $jwt_auth->checkToken($token);
-
-        $data = array(
-            'status' => 'error',
-            'code' => 400,
-            'msg' => 'Document not created !!'
-        );         
-
-        if($authCheck)
-        {   
-        	$id=$request->get('idmodelo', null);
-        	$em = $this->getDoctrine()->getManager();
-        	$modelo = $em->getRepository('ModelBundle:modelo')->find($id);
-
-        	if($modelo) {
-			    $data = array(
-			        'status' => 'Success',
-			        'code' => 200,
-			        'msg' => 'Document recovered !!', 
-			        'authcheck' => $authCheck,
-			        'modelo' => $modelo
-			    );            		
-        	}
-
-        	else {
-			    $data = array(
-			        'status' => 'error',
-			        'code' => 400,
-			        'msg' => 'Document not exist !!', 
-			        'authcheck' => $authCheck
-			    );            		        		
-        	}    			          	
-        }     			
-		
-		else
-		{
-	        $data = array(
-    	        'status' => 'error',
-        	    'code' => 400,
-            	'msg' => 'Authorization not valid'
-        	);         
-		}	
-
-		return $helpers->json($data);
-		
-		*/		
-
-
 		echo "Hola mundo desde el controlador de devolver un modelo";
 		die();		
 	}	

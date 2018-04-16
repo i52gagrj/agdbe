@@ -17,61 +17,6 @@ use AppBundle\Services\JwtAuth;
 
 class DocumentoController extends Controller {
 
-	/*public function pruebaAction(Request $request) {
-        $helpers = $this->get(Helpers::class);
-		$jwt_auth = $this->get(JwtAuth::class);
-
-		$uploadedFichero = $request->files->get('file');
-
-		$token = $request->get('authorization');
-
-		$token = $jwt_auth->checkToken($token);
-
-		$usuario = $jwt_auth->returnUser($request->get('usuario', null));
-
-		if($uploadedFichero)
-		{			
-			// /**
-			//   * @var UploadedFile $fichero;
-			//  */ /*				
-			$fichero = $uploadedFichero;
-			$nombrefichero=md5(uniqid()).'.'.$fichero->guessExtension();
-			$fichero->move($this->getParameter('directorio_documentos'),$nombrefichero);
-
-			if($usuario){
-				$data = array(
-					'status' => 'success',
-					'code' => 200,
-					'msg' => 'File moved with user',
-					'token' => $token,
-					'usuario' => $usuario
-				); 
-			}
-			else
-			{
-				$data = array(
-					'status' => 'success',
-					'code' => 200,
-					'msg' => 'File moved without user',
-					'token' => $token,
-					'usuario' => $usuario
-				); 
-			}
-		}
-		else
-		{
-			$data = array(
-				'status' => 'error',
-				'code' => 400,
-				'msg' => 'File not found'
-			); 
-		}
-
-		return new JsonResponse($data);
-		//return $helpers->json($data);
-
-	}*/
-
 	public function newAction(Request $request) {
         $helpers = $this->get(Helpers::class);
 		$jwt_auth = $this->get(JwtAuth::class);
@@ -219,77 +164,12 @@ class DocumentoController extends Controller {
 
 		return $helpers->json($data);	
 	}
-	
+		 
 
-	 
+
 	public function returnoneAction(Request $request) {		
-		// Devuelve la ruta de un documento por la id
-		/*
-		Recuperamos la autorización
-		De ser correcta, se busca el documento por la id pasada
-		Si está, se devuelve este
-		Si no está, se devuelve un mensaje de no encontrado
-		De ser incorrecta la autorización, se devuelve un mensaje de error en la misma
-	 	*/		
-
-		/*
-
-    	$helpers = $this->get(Helpers::class);
-        $jwt_auth = $this->get(JwtAuth::class);
-
-        $token = $request->get('authorization', null);
-
-        $authCheck = $jwt_auth->checkToken($token);
-
-        $data = array(
-            'status' => 'error',
-            'code' => 400,
-            'msg' => 'Document not created !!'
-        );         
-
-        if($authCheck)
-        {   
-        	$id=$request->get('iddocumento', null);
-        	$em = $this->getDoctrine()->getManager();
-        	$documento = $em->getRepository('ModelBundle:Documento')->find($id);
-
-        	if($documento) {
-			    $data = array(
-			        'status' => 'Success',
-			        'code' => 200,
-			        'msg' => 'Document recovered !!', 
-			        'authcheck' => $authCheck,
-			        'documento' => $documento
-			    );            		
-        	}
-
-        	else {
-			    $data = array(
-			        'status' => 'error',
-			        'code' => 400,
-			        'msg' => 'Document not exist !!', 
-			        'authcheck' => $authCheck
-			    );            		        		
-        	}    			          	
-        }     			
-		
-		else
-		{
-	        $data = array(
-    	        'status' => 'error',
-        	    'code' => 400,
-            	'msg' => 'Authorization not valid'
-        	);         
-		}	
-
-		return $helpers->json($data);
-		
-		*/		
-
-
 		echo "Hola mundo desde el controlador de devolver un Documento";
 		die();		
 	}
-	
 
 }
