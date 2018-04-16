@@ -121,7 +121,7 @@ class DocumentoController extends Controller {
 				$documento->setDescripcion($params->descripcion);
 				$documento->setTipo($tipo);				
 				$documento->setFechahora(new \Datetime("now"));
-				$documento->setUsuario($identity);       
+				$documento->setUsuario($identity->getId());       
 
 				$em = $this->getDoctrine()->getManager();
 				$em->persist($documento);
@@ -138,7 +138,7 @@ class DocumentoController extends Controller {
 					'code' => 200, 					
 					'token' => $authCheck,
 					'msg' => 'New Document created!!',
-					'documento' => $datosdocumento
+					'documento' => $documento
 				);    
 			}
 			else
