@@ -93,7 +93,96 @@ class MensajeController extends Controller {
 		return $helpers->json($data);		
 	}	
 
-	public function todoAction(Request $request) {
+	public function listallAction(Request $request) {
+		// Devuelve el listado de todos los documentos de un cliente
+		// La idea es que devuelva la descripción y los datos, no la ruta!!
+
+		// Si se pasa el usuario como parametro, se devolverán los documentos del usuario (descripción y datos, no ruta)
+		// Esto serviria para que los administradores pasen el id de un usario y recuperen sus documentos
+		// Si no se pasa, se recupera el usario del token
+		// Esta manera servirá para que los usuarios recuperen el listado de sus documentos
+		
+        $helpers = $this->get(Helpers::class);
+        $jwt_auth = $this->get(JwtAuth::class);
+
+        $token = $request->get('authorization', null);
+		$authCheck = $jwt_auth->checkToken($token);
+		
+
+		$data = array(
+			'status' => 'error',
+			'code' => 400,
+			'msg' => 'Authorization not valid !!'
+		); 
+		
+        if($authCheck){		
+			$decode = $jwt_auth->decodeToken($token);
+			//$identity = $jwt_auth->returnUser($decode->sub);						
+			$id = $request->get('id', null);
+
+			if($id){
+				if($decode->rol=="admin"){
+					$userid = $id;
+				}else{
+					$userid = null;
+					$data = array(
+						'status' => 'error',
+						'code' => 400,
+						'msg' => 'User not admin !!'
+					); 
+				}
+			}else{
+				$userid = $decode->sub;
+			}
+				
+
+			if($userid){
+				//Buscar los documentos creados por el usuario indicado, ordenados por fecha
+				$em = $this->getDoctrine()->getManager();			
+
+				$dql = "SELECT m FROM ModelBundle:Mensaje m "
+                	."WHERE m.emisor = $decode->sub OR m.receptor = $decode->sub "
+					."ORDER BY m.fechahora ASC";
+
+				$query = $em->createQuery($dql);
+
+				//Paginarlos
+				$page = $request->query->getInt('page', 1);
+				$paginator = $this->get('knp_paginator');
+				$items_per_page = 10;
+				$pagination = $paginator->paginate($query, $page, $items_per_page);
+				$total_items_count = $pagination->getTotalItemCount();			
+		
+				$mensajes = $query->getResult();				
+
+				if($mensajes){	
+					$data = array(
+						'status' => 'success',
+						'code' => 200,
+						'token' => $authCheck,                    
+						'total_items_count' => $total_items_count,
+						'page_actual' => $page,
+						'items_per_page' => $items_per_page,
+						'total_pages' => ceil($total_items_count / $items_per_page),
+						'data' => $pagination
+					);    
+				}else{
+					$data = array(
+						'status' => 'success',
+						'code' => 200,
+						'id' => $userid,
+						'token' => $authCheck,                    
+						'message' => "No hay mensajes"
+					);    				
+				}	
+			}		
+
+		}
+
+		return $helpers->json($data);	
+	}	
+
+	/*public function listallAction(Request $request) {
         $helpers = $this->get(Helpers::class);
         $jwt_auth = $this->get(JwtAuth::class);
 
@@ -109,10 +198,9 @@ class MensajeController extends Controller {
         if($authCheck){		
 			$decode = $jwt_auth->decodeToken($token);
 			$identity = $jwt_auth->returnUser($decode->sub);				
-
-			/*
-			Buscar los mensajes enviados y recibidos por el usuario identificado, ordenados por fecha
-			*/
+			
+			//Buscar los mensajes enviados y recibidos por el usuario identificado, ordenados por fecha
+			
 			$em = $this->getDoctrine()->getManager();			
 
 			$dql = "SELECT m FROM ModelBundle:Mensaje m "
@@ -145,7 +233,7 @@ class MensajeController extends Controller {
 
 		return $helpers->json($data);		
 
-	}	
+	}*/	
 
 	public function messageuserAction(Request $request) {
         $helpers = $this->get(Helpers::class);

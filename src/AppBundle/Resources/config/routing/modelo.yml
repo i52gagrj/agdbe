@@ -2,3 +2,8 @@ modelo_new:
     path: /new
     defaults: { _controller: "AppBundle:Modelo:new" }
     methods: POST
+
+modelo_listall:
+    path: /listall
+    defaults: { _controller: "AppBundle:Modelo:listall" }
+    methods: POST    

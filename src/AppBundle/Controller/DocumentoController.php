@@ -117,7 +117,7 @@ class DocumentoController extends Controller {
 
         $token = $request->get('authorization', null);
 		$authCheck = $jwt_auth->checkToken($token);
-		$id = $request->get('id', null);
+		
 
 		$data = array(
 			'status' => 'error',
@@ -126,39 +126,64 @@ class DocumentoController extends Controller {
 		); 
 		
         if($authCheck){		
-			//$decode = $jwt_auth->decodeToken($token);
-			//$identity = $jwt_auth->returnUser($decode->sub);				
+			$decode = $jwt_auth->decodeToken($token);
+			//$identity = $jwt_auth->returnUser($decode->sub);						
+			$id = $request->get('id', null);
 
-			/*
-			Buscar los documentos creados por el usuario indicado, ordenados por fecha
-			*/
-			$em = $this->getDoctrine()->getManager();			
-
-			$dql = "SELECT d FROM ModelBundle:Documento d "
-                ."WHERE d.usuario = $id"
-				."ORDER BY d.fechahora ASC";
-
-			$query = $em->createQuery($dql);
-	
-			$documentos = $query->getResult();
-
-			//FALTARIA PAGINARLOS
-
-			if($documentos){	
-				$data = array(
-					'status' => 'success',
-					'code' => 200,
-					'token' => $authCheck,                    
-					'documentos' => $documentos
-				);    
+			if($id){
+				if($decode->rol=="admin"){
+					$userid = $id;
+				}else{
+					$userid = null;
+					$data = array(
+						'status' => 'error',
+						'code' => 400,
+						'msg' => 'User not admin !!'
+					); 
+				}
 			}else{
-				$data = array(
-					'status' => 'success',
-					'code' => 200,
-					'token' => $authCheck,                    
-					'documentos' => "No hay documentos"
-				);    				
-			}			
+				$userid = $decode->sub;
+			}
+				
+
+			if($userid){
+				//Buscar los documentos creados por el usuario indicado, ordenados por fecha
+				$em = $this->getDoctrine()->getManager();			
+
+				$dql = "SELECT d FROM ModelBundle:Documento d WHERE d.usuario = {$userid} ORDER BY d.fechahora ASC";
+
+				$query = $em->createQuery($dql);
+
+				//Paginarlos
+				$page = $request->query->getInt('page', 1);
+				$paginator = $this->get('knp_paginator');
+				$items_per_page = 10;
+				$pagination = $paginator->paginate($query, $page, $items_per_page);
+				$total_items_count = $pagination->getTotalItemCount();			
+		
+				$documentos = $query->getResult();				
+
+				if($documentos){	
+					$data = array(
+						'status' => 'success',
+						'code' => 200,
+						'token' => $authCheck,                    
+						'total_items_count' => $total_items_count,
+						'page_actual' => $page,
+						'items_per_page' => $items_per_page,
+						'total_pages' => ceil($total_items_count / $items_per_page),
+						'data' => $pagination
+					);    
+				}else{
+					$data = array(
+						'status' => 'success',
+						'code' => 200,
+						'id' => $userid,
+						'token' => $authCheck,                    
+						'message' => "No hay documentos"
+					);    				
+				}	
+			}		
 
 		}
 

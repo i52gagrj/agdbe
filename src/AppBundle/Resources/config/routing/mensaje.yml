@@ -3,9 +3,9 @@ mensaje_new:
     defaults: { _controller: "AppBundle:Mensaje:new" }
     methods: POST
 
-mensaje_todo:
-    path: /todo
-    defaults: { _controller: "AppBundle:Mensaje:todo" }
+mensaje_listall:
+    path: /listall
+    defaults: { _controller: "AppBundle:Mensaje:listall" }
     methods: POST    
 
 mensaje_user:
