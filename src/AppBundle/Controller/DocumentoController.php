@@ -133,6 +133,7 @@ class DocumentoController extends Controller {
 			if($id){
 				if($decode->rol=="admin"){
 					$userid = $id;
+					//FALTA CONFIRMAR QUE EL ADMINISTRADOR ES EL DEL USUARIO
 				}else{
 					$userid = null;
 					$data = array(

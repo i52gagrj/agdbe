@@ -37,11 +37,11 @@ class MensajeController extends Controller {
 			{
 				$params = json_decode($json);
 				$creacion = new \Datetime('now');
-				$origen = $identity;
-				$destino = (isset($params->destino)) ? $jwt_auth->returnUser($params->destino) : null;
+				$emisor = $identity->getId();
+				$receptor = (isset($params->receptor)) ? $params->receptor : null;
 				$texto = (isset($params->texto)) ? $params->texto : null;
 				
-				if($destino && $texto)
+				if($receptor && $texto)
 				{
 					//Crear objeto mensaje
 					$mensaje = new Mensaje();
@@ -49,8 +49,8 @@ class MensajeController extends Controller {
 					// Salvar los datos en la entidad mensaje
 					$mensaje->setTexto($texto);				
 					$mensaje->setFechahora($creacion);
-					$mensaje->setEmisor($origen->getId());
-					$mensaje->setReceptor($destino->getId());
+					$mensaje->setEmisor($emisor);
+					$mensaje->setReceptor($receptor);
 
 					// Crear conexion a base de datos
 					$em = $this->getDoctrine()->getManager();			
@@ -63,7 +63,7 @@ class MensajeController extends Controller {
 						'status' => 'success',
 						'code' => 200,
 						'token' => $authCheck,
-						'msg' => 'Message stored'
+						'mensaje' => $mensaje
 					); 
 
 				}

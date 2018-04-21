@@ -51,6 +51,7 @@ class JwtAuth
 				"nombre" => $user->getNombre(),
 				"idsesion" => $sesionid,
 				"rol" => $user->getRol(),
+				"admin" => $user->getAdmin(),
 				"iat" => time(),
 				"exp" => time() + (90000)
 			);	
@@ -90,7 +91,8 @@ class JwtAuth
 				"nombre" => $decoded->nombre,
 				"idsesion" => $decoded->idsesion,
 				"rol" => $decoded->rol,
-				"iat" => time(),
+				"admin" => $decoded->admin,
+				"iat" => $decoded->iat,
 				"exp" => time() + (90000)
 			);	
 			$auth = JWT::encode($token, $this->key, 'HS256');
