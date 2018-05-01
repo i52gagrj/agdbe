@@ -11,4 +11,9 @@ documento_listall:
 documento_returnone:
     path: /returnone
     defaults: { _controller: "AppBundle:Documento:returnone" }
-    methods: POST    
+    methods: POST  
+
+documento_delete:
+    path: /delete
+    defaults: { _controller: "AppBundle:Documento:delete" }
+    methods: POST        

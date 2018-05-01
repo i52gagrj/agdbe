@@ -95,7 +95,7 @@ class ModeloController extends Controller {
         {    		
 	        $data = array(
 	            'status' => 'error',
-	            'code' => 400,
+	            'code' => 405,
 	            'msg' => 'Authorization not valid !!'
 	        ); 
         }
@@ -123,7 +123,7 @@ class ModeloController extends Controller {
 
 		$data = array(
 			'status' => 'error',
-			'code' => 400,
+			'code' => 405,
 			'msg' => 'Authorization not valid !!'
 		); 
 		

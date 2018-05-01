@@ -10,6 +10,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\HttpFoundation\File\File;
 use ModelBundle\Entity\Usuario;
 use ModelBundle\Entity\Documento;
 use AppBundle\Services\Helpers;
@@ -21,10 +22,9 @@ class DocumentoController extends Controller {
         $helpers = $this->get(Helpers::class);
 		$jwt_auth = $this->get(JwtAuth::class);
 
-		/* NOTA
-		Hay que añadir una condición para que solo puedan añadir documentos los usuarios clientes, y no lo puedan hacer los administradores
-		En el caso de modelos, será simetrico: solo podrán añadirlos los administradores, y no los clientes.
-		*/
+		// NOTA
+		//Hay que añadir una condición para que solo puedan añadir documentos los usuarios clientes, y no lo puedan hacer los administradores
+		//En el caso de modelos, será simetrico: solo podrán añadirlos los administradores, y no los clientes.		
 		
 		// Requerir autorización
 
@@ -34,8 +34,9 @@ class DocumentoController extends Controller {
 
         $data = array(
             'status' => 'error',
-            'code' => 400,
-            'msg' => 'Authorization not valid !!'
+            'code' => 405,
+			'msg' => 'Authorization not valid !!',
+			'token' => $token
         );         
 
         if($authCheck)
@@ -79,7 +80,7 @@ class DocumentoController extends Controller {
 				);
 				
 				$data = array(
-					'status' => 'Success',
+					'status' => 'success',
 					'code' => 200, 					
 					'token' => $authCheck,
 					'msg' => 'New Document created!!',
@@ -92,11 +93,15 @@ class DocumentoController extends Controller {
 					'status' => 'error',
 					'code' => 400,
 					'token' => $authCheck,
-					'msg' => 'File not send'
+					'msg' => 'File not send',
+					'token' => $token
 				); 				
 			}
 		       		
-        }
+		}
+		else{
+
+		}
         
 		return $helpers->json($data);
 			
@@ -121,7 +126,7 @@ class DocumentoController extends Controller {
 
 		$data = array(
 			'status' => 'error',
-			'code' => 400,
+			'code' => 405,
 			'msg' => 'Authorization not valid !!'
 		); 
 		
@@ -151,7 +156,7 @@ class DocumentoController extends Controller {
 				//Buscar los documentos creados por el usuario indicado, ordenados por fecha
 				$em = $this->getDoctrine()->getManager();			
 
-				$dql = "SELECT d FROM ModelBundle:Documento d WHERE d.usuario = {$userid} ORDER BY d.fechahora ASC";
+				$dql = "SELECT d FROM ModelBundle:Documento d WHERE d.usuario = {$userid} ORDER BY d.fechahora DESC";
 
 				$query = $em->createQuery($dql);
 
@@ -162,7 +167,9 @@ class DocumentoController extends Controller {
 				$pagination = $paginator->paginate($query, $page, $items_per_page);
 				$total_items_count = $pagination->getTotalItemCount();			
 		
-				$documentos = $query->getResult();				
+				$documentos = $query->getResult();		
+				
+				$then = new \Datetime("+15 minutes");				
 
 				if($documentos){	
 					$data = array(
@@ -180,7 +187,8 @@ class DocumentoController extends Controller {
 						'status' => 'success',
 						'code' => 200,
 						'id' => $userid,
-						'token' => $authCheck,                    
+						'token' => $authCheck,    
+						'data' => null,                
 						'message' => "No hay documentos"
 					);    				
 				}	
@@ -194,8 +202,139 @@ class DocumentoController extends Controller {
 
 
 	public function returnoneAction(Request $request) {		
-		echo "Hola mundo desde el controlador de devolver un Documento";
-		die();		
+		// Devuelve el documento con la id indicada, comprobando previamente si pertenece al usuario 
+		// que ha realizado la petición, mediante la id del token		
+
+		// Si se pasa el usuario como parametro, se devolverán los documentos del usuario (descripción y datos, no ruta)
+		// Esto serviria para que los administradores pasen el id de un usario y recuperen sus documentos
+		// Si no se pasa, se recupera el usario del token
+		// Esta manera servirá para que los usuarios recuperen el listado de sus documentos
+		
+        $helpers = $this->get(Helpers::class);
+        $jwt_auth = $this->get(JwtAuth::class);
+
+        $token = $request->get('authorization', null);
+		$authCheck = $jwt_auth->checkToken($token);
+		$file = null;
+		
+		$data = array(
+			'status' => 'error',
+			'code' => 405,
+			'msg' => 'Authorization not valid !!'
+		); 
+		
+        if($authCheck){		
+			$decode = $jwt_auth->decodeToken($token);
+	        $id = $request->get('id', null);
+
+			if($id){
+				// Buscar el documento indicado				
+				$em = $this->getDoctrine()->getManager();			
+					
+				$documento = $em->getRepository('ModelBundle:Documento')->find($id);
+
+				if($documento){
+					if($decode->sub != $documento->getUsuario() && $decode->rol!="admin"){
+						$data = array(
+							'status' => 'error',
+							'code' => 400,
+							'msg' => 'User not admin !!'
+						);
+					}else{
+						$file = new File($this->getParameter('directorio_documentos').'/'.$documento->getRuta());
+						//$file = $this->getParameter('directorio_documentos').'/'.$documento->getRuta();
+						$data = array(
+							'status' => 'success',
+							'code' => 200,
+							'id' => $id,
+							'token' => $authCheck
+						);   						
+					}	
+				}else{
+					$data = array(
+						'status' => 'success',
+						'code' => 200,
+						'id' => $id,
+						'token' => $authCheck,                    
+						'message' => "El documento no existe"
+					);    				
+				}	
+			}else{
+				$data = array(
+					'status' => 'error',
+					'code' => 400,
+					'msg' => 'id not send !!'
+				);				
+			}		
+
+		}
+
+		if($file){ return $this->file($file);}
+		else{ return $helpers->json($data);}
 	}
 
+	public function deleteAction(Request $request) {		
+		$helpers = $this->get(Helpers::class);
+        $jwt_auth = $this->get(JwtAuth::class);
+
+        $token = $request->get('authorization', null);
+		$authCheck = $jwt_auth->checkToken($token);
+		
+		$data = array(
+			'status' => 'error',
+			'code' => 405,
+			'msg' => 'Authorization not valid !!'
+		); 
+		
+        if($authCheck){		
+			$decode = $jwt_auth->decodeToken($token);					
+	        $id = $request->get('id', null);
+
+			if($id){
+				//Buscar el documento indicado
+				$em = $this->getDoctrine()->getManager();			
+					
+				$documento = $em->getRepository('ModelBundle:Documento')->find($id);
+
+				if($documento && is_object($documento)){
+					if($decode->sub != $documento->getUsuario()){						
+						$data = array(
+							'status' => 'error',
+							'code' => 400,
+							'msg' => 'User not owner !!'
+						);
+					}else{
+						//Borrar documento
+						//Hay que implementar la eliminación del documento de la carpeta
+						$em->remove($documento);
+						$em->flush();
+						$data = array(
+							'status' => 'success',
+							'code' => 200,
+							'id' => $id,
+							'token' => $authCheck,
+							'message' => "Documento borrado"                    							
+						);   						
+					}	
+				}else{
+					$data = array(
+						'status' => 'error',
+						'code' => 400,
+						'id' => $id,
+						'token' => $authCheck,                    
+						'message' => "El documento no existe"
+					);    				
+				}	
+			}else{
+				$data = array(
+					'status' => 'error',
+					'code' => 400,
+					'msg' => 'id not send !!'
+				);				
+			}		
+
+		}
+
+		return $helpers->json($data);		
+	}	
 }

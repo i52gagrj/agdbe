@@ -24,7 +24,7 @@ class MensajeController extends Controller {
 
 		$data = array(
 			'status' => 'error',
-			'code' => 400,
+			'code' => 405,
 			'msg' => 'Authorization not valid !!'
 		); 
 		
@@ -111,7 +111,7 @@ class MensajeController extends Controller {
 
 		$data = array(
 			'status' => 'error',
-			'code' => 400,
+			'code' => 405,
 			'msg' => 'Authorization not valid !!'
 		); 
 		
@@ -142,7 +142,7 @@ class MensajeController extends Controller {
 
 				$dql = "SELECT m FROM ModelBundle:Mensaje m "
                 	."WHERE m.emisor = $decode->sub OR m.receptor = $decode->sub "
-					."ORDER BY m.fechahora ASC";
+					."ORDER BY m.fechahora DESC";
 
 				$query = $em->createQuery($dql);
 
@@ -245,7 +245,7 @@ class MensajeController extends Controller {
 
 		$data = array(
 			'status' => 'error',
-			'code' => 400,
+			'code' => 405,
 			'msg' => 'Authorization not valid !!'
 		); 
 		

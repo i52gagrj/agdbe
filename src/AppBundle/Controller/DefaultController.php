@@ -67,6 +67,7 @@ class DefaultController extends Controller
     }
 
     public function returnidentityAction(Request $request) {
+        // Solo como prueba. Borrar en versión final
         $helpers = $this->get(Helpers::class);
         // Recibir json por POST
         $json = $request->get("token", null);
@@ -100,7 +101,29 @@ class DefaultController extends Controller
         //return $helpers->json($data);                            
     }
 
+    public function logoutAction(Request $request) {
+        // Solo como prueba. Borrar en versión final
+        $helpers = $this->get(Helpers::class);
+        $jwt_auth = $this->get(JwtAuth::class);        
+
+        $token = $request->get('authorization', null);
+		$authCheck = $jwt_auth->checkToken($token);
+		
+		$data = array(
+			'status' => 'success',
+			'code' => 200,
+			'msg' => 'Session ended'
+		); 
+		
+        if($authCheck){		
+			$jwt_auth->finsesion($token);            
+		}
+
+		return $helpers->json($data);		
+    }
+
     public function pruebasAction(Request $request) {
+        // Solo como prueba. Borrar en versión final
         $token = $request->get("authorization", null);
         $helpers = $this->get(Helpers::class);
         $jwt_auth = $this->get(JwtAuth::class);

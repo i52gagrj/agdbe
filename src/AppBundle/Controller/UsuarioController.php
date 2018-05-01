@@ -14,6 +14,8 @@ use AppBundle\Services\JwtAuth;
 class UsuarioController extends Controller {
 
 	public function newAction(Request $request) {
+        //Modificar. Que solo puedan usarlo los administradores, y que solo pueda crear 
+        // usuarios clientes de esos administradores
         $helpers = $this->get(Helpers::class);
         $jwt_auth = $this->get(JwtAuth::class);
 

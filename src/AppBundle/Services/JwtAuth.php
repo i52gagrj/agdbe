@@ -53,7 +53,7 @@ class JwtAuth
 				"rol" => $user->getRol(),
 				"admin" => $user->getAdmin(),
 				"iat" => time(),
-				"exp" => time() + (90000)
+				"exp" => time() + (900)
 			);	
 
 			$jwt = JWT::encode($token, $this->key, 'HS256');
@@ -80,12 +80,13 @@ class JwtAuth
         	$auth = false;	
         }catch(\DomainException $e){
         	$auth = false;	
-        }
+		}
+		
+		$now = time();
 
-        if(isset($decoded) && is_object($decoded) && isset($decoded->sub)){
-        	//Generar un nuevo jwt con otros quince minutos más
-        	
-        	$token = array(
+        if(isset($decoded) && is_object($decoded) && isset($decoded->sub) && $decoded->exp > $now ){
+			//Generar un nuevo jwt con otros quince minutos más        	
+			$token = array(
 				"sub" => $decoded->sub,
 				"email" => $decoded->email,
 				"nombre" => $decoded->nombre,
@@ -93,21 +94,19 @@ class JwtAuth
 				"rol" => $decoded->rol,
 				"admin" => $decoded->admin,
 				"iat" => $decoded->iat,
-				"exp" => time() + (90000)
+				"exp" => time() + (900)
 			);	
 			$auth = JWT::encode($token, $this->key, 'HS256');
-
-        	//Modificar sesión para añadirle quince minutos más al tiempo
-        	//Recuperar sesion desde $decoded->idsesion
-        	//Modificar end para añadirle el tiempo actual +quince minutos
-        	//Guardar la sesion modificada
+			//Modificar sesión para añadirle quince minutos más al tiempo
+			//Recuperar sesion desde $decoded->idsesion
+			//Modificar end para añadirle el tiempo actual +quince minutos
+			//Guardar la sesion modificada
 			$em = $this->manager;
 			$sesion = $em->getRepository('ModelBundle:Sesion')->find($decoded->idsesion);
 			$sesion->setFin(new \Datetime("+15 minutes"));
-            $em->persist($sesion);
-            $em->flush();
-
-        }
+			$em->persist($sesion);
+			$em->flush();
+		}	
         else
         {
         	//Si no es valido el token
@@ -151,12 +150,27 @@ class JwtAuth
 
 	}
 
-    /*
-	public function finsesion($data){
-		//La clave de la sesión está en el token. Si es válido, hay que modificar la sesión
-		//Quizás esto vaya mejor en el checktoken
-		//Revisar
+  	public function finsesion($jwt){
+    	$auth = false;
+        try{
+            $decoded = JWT::decode($jwt, $this->key, array('HS256'));
+        }catch(\UnexpectedValueException $e){
+        	$auth = false;	
+        }catch(\DomainException $e){
+        	$auth = false;	
+		}
+		
+		$now = time();
+
+        if(isset($decoded) && is_object($decoded) && isset($decoded->sub) && $decoded->exp > $now ){
+			$em = $this->manager;
+			$sesion = $em->getRepository('ModelBundle:Sesion')->find($decoded->idsesion);
+			$sesion->setFin(new \Datetime);
+			$em->persist($sesion);
+			$em->flush();
+		}	
+
+       	return null;		
 	}
-	*/
 }
 
