@@ -38,7 +38,7 @@ class DefaultController extends Controller
             //Recoger los datos
             $email = (isset($params->email)) ? $params->email : null;
             $password = (isset($params->password)) ? $params->password : null;
-            $getHash = (isset($params->getHash)) ? $params->getHash : null;
+            //$getHash = (isset($params->getHash)) ? $params->getHash : null;
             $emailConstraint = new Assert\Email();
             $emailConstraint->message = "This email is not valid !!";
             $validate_email = $this->get("validator")->validate($email, $emailConstraint);
@@ -49,11 +49,24 @@ class DefaultController extends Controller
                 $pwd=hash('sha256',$password);
                 $signup = $jwt_auth ->signup($email, $pwd);
                 return $this->json($signup);
-                $data = array(
-                    'status' => 'success',
-                    'data' => 'Email correct',
-                    'token' => $signup
-                );                 
+                /*$identity = $jwt_auth->decodeToken($signup);
+                $user = $jwt_auth->returnUser($identity->sub);
+                if($identity && $user){
+                    $data = array(
+                        'status' => 'success',
+                        'data' => 'Email correct',                    
+                        'token' => $signup,
+                        'user' => $user
+                    );                 
+                }
+                else{
+                    $data = array(
+                        'status' => 'error',
+                        'data' => 'Error on signup or user',                    
+                        'token' => $signup,
+                        'user' => $user
+                    );                    
+                }*/
             }
             else
             {

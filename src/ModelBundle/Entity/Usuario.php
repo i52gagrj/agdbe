@@ -29,11 +29,11 @@ class Usuario
     private $nombre;
 
     /**
-     * @var string
+     * @var boolean
      *
-     * @ORM\Column(name="rol", type="string", length=20)
+     * @ORM\Column(name="isadmin", type="boolean")
      */
-    private $rol;
+    private $isadmin;
 
     /**
      * @var string
@@ -100,27 +100,27 @@ class Usuario
     }
 
     /**
-     * Set rol
+     * Set isadmin
      *
-     * @param string $rol
+     * @param boolean $isadmin
      *
      * @return Usuario
      */
-    public function setRol($rol)
+    public function setIsadmin($isadmin)
     {
-        $this->rol = $rol;
+        $this->isadmin = $isadmin;
 
         return $this;
     }
 
     /**
-     * Get rol
+     * Get isadmin
      *
-     * @return string
+     * @return boolean
      */
-    public function getRol()
+    public function getIsadmin()
     {
-        return $this->rol;
+        return $this->isadmin;
     }
 
     /**

@@ -78,6 +78,13 @@ class Modelo
     private $ruta;    
 
     /**
+     * @var boolean
+     *
+     * @ORM\Column(name="visto", type="boolean")
+     */
+    private $visto;     
+
+    /**
      * @var int
      *
      * @ORM\Column(name="usuario", type="integer")
@@ -261,6 +268,30 @@ class Modelo
     {
         return $this->ruta;
     }
+
+    /**
+     * Set visto
+     *
+     * @param boolean $visto
+     *
+     * @return Documento
+     */
+    public function setVisto($visto)
+    {
+        $this->visto = $visto;
+
+        return $this;
+    }
+
+    /**
+     * Get visto
+     *
+     * @return boolean
+     */
+    public function getVisto()
+    {
+        return $this->visto;
+    }       
 
     /**
      * Set usuario

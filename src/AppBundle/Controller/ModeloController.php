@@ -36,59 +36,73 @@ class ModeloController extends Controller {
         );         
 
         if($authCheck)
-        {        										
-			// Requerir los datos json enviados
-	        $json = $request->get('json', null);
-			$params = json_decode($json);
+        {      
+			$decoded = $jwt_auth->decodeToken($authCheck);  	
+			if($decoded->isadmin)
+			{									
+				// Requerir los datos json enviados
+				$json = $request->get('json', null);
+				$params = json_decode($json);
 
-			// Requerir fichero
-			$uploadedFichero = $request->files->get('file');
+				// Requerir fichero
+				$uploadedFichero = $request->files->get('file');
 
-			// Requerir usuario
-			$usuario = $jwt_auth->returnUser($params->usuario);			
-			
-			if($uploadedFichero && $usuario)
-			{														
-				/**
-				  * @var UploadedFile $fichero;
-				  */ 				
-				$fichero = $uploadedFichero;
-				$tipo = $fichero->guessExtension();
-				$nombrefichero=md5(uniqid()).'.'.$tipo;
-				$fichero->move($this->getParameter('directorio_modelos'),$nombrefichero);				
-				$modelo = new modelo();
-				$modelo->setRuta($nombrefichero);
-				$modelo->setDescripcion($params->descripcion);
-				$modelo->setCodigo($params->codigo);
-				$modelo->setTrimestre($params->trimestre);
-				$modelo->setEjercicio($params->ejercicio);
-				$modelo->setTipo($tipo);				
-				$modelo->setFechahora(new \Datetime("now"));
-				$modelo->setUsuario($usuario->getId());       
-
-				$em = $this->getDoctrine()->getManager();
-				$em->persist($modelo);
-				$em->flush();   
+				// Requerir usuario
+				$usuario = $jwt_auth->returnUser($params->usuario);			
 				
-				$data = array(
-					'status' => 'Success',
-					'code' => 200,
-					'msg' => 'New Document created!!', 					
-					'token' => $authCheck,
-					'modelo' => $modelo
-				);    
-			}
-			else
+				if($uploadedFichero && $usuario)
+				{														
+					/**
+					 * @var UploadedFile $fichero;
+					*/ 				
+					$fichero = $uploadedFichero;
+					$tipo = $fichero->guessExtension();
+					$nombrefichero=md5(uniqid()).'.'.$tipo;
+					$fichero->move($this->getParameter('directorio_modelos'),$nombrefichero);				
+					$modelo = new modelo();
+					$modelo->setRuta($nombrefichero);
+					$modelo->setDescripcion($params->descripcion);
+					$modelo->setCodigo($params->codigo);
+					$modelo->setTrimestre($params->trimestre);
+					$modelo->setEjercicio($params->ejercicio);
+					$modelo->setTipo($tipo);				
+					$modelo->setFechahora(new \Datetime("now"));
+					$modelo->setUsuario($usuario->getId());
+					$modelo->setVisto(false);       
+
+					$em = $this->getDoctrine()->getManager();
+					$em->persist($modelo);
+					$em->flush();   
+					
+					$data = array(
+						'status' => 'success',
+						'code' => 200,
+						'msg' => 'New Document created!!', 					
+						'token' => $authCheck,
+						'modelo' => $modelo
+					);    
+				}
+				else
+				{
+					$data = array(
+						'status' => 'error',
+						'code' => 400,
+						'msg' => 'File not send or user not valid', 
+						'descripcion' => $params->descripcion,
+						'token' => $authCheck
+					); 				
+				}
+			}	
+			else 
 			{
 				$data = array(
 					'status' => 'error',
 					'code' => 400,
-					'msg' => 'File not send or user not valid', 
+					'msg' => 'User not admin', 
 					'descripcion' => $params->descripcion,
 					'token' => $authCheck
-				); 				
-			}
-		       		
+				); 	
+			}   		
         }
 
         else 
@@ -133,7 +147,7 @@ class ModeloController extends Controller {
 			$id = $request->get('id', null);
 
 			if($id){
-				if($decode->rol=="admin"){
+				if($decode->isadmin){
 					$userid = $id;
 				}else{
 					$userid = null;
@@ -209,7 +223,7 @@ class ModeloController extends Controller {
 		$identity = $jwt_auth->returnUser($decoded->sub);
 		$id = $request->get('id', null);
 
-		if($id && $decoded->rol != 'admin'){
+		if($id && $ !decoded->isadmin){
 			$authCheck = null;
 		}
 

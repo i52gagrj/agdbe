@@ -23,47 +23,68 @@ class JwtAuth
 		));
 
 		$signup = false;
+		//$ultimotiempo = time();
+		$now = new \Datetime();
 
 		if(is_object($user)) $signup = true;
-		//Iniciar sesión. Devolver en el token el id de la sesion
-		
+		//Iniciar sesión. Devolver en el token el id de la sesion		
 
 		if($signup)
 		{
-			//Generar sesion 
-			$sesionid=0;
+			//Leer las sesiones del usuario
+			$uid = $user->getId();
 
-			$sesion = new Sesion;
-			$sesion->setInicio(new \Datetime("now"));
-			$sesion->setFin(new \Datetime("+15 minutes"));
-			$sesion->setUsuario($user->getId());
+			$dql = "SELECT s FROM ModelBundle:Sesion s "
+				."WHERE s.usuario = $uid "
+				."ORDER BY s.fin DESC";
 
-			$this->manager->persist($sesion);	
-			$this->manager->flush();
+			$query = $this->manager->createQuery($dql);
 
-			$sesionid = $sesion->getId();
+			$ultimotiempo = $query->getResult()[0]->getFin();
 
-			//GENERAR TOKEN JWT
+			if($query && $ultimotiempo < $now){
+				//Generar sesion 						
+				$sesionid=0;
 
-			$token = array(
-				"sub" => $user->getId(),
-				"email" => $user->getEmail(),
-				"nombre" => $user->getNombre(),
-				"idsesion" => $sesionid,
-				"rol" => $user->getRol(),
-				"admin" => $user->getAdmin(),
-				"iat" => time(),
-				"exp" => time() + (900)
-			);	
+				$sesion = new Sesion;
+				$sesion->setInicio(new \Datetime("now"));
+				$sesion->setFin(new \Datetime("+15 minutes"));
+				$sesion->setUsuario($user->getId());
 
-			$jwt = JWT::encode($token, $this->key, 'HS256');
-			$data = $jwt;			
+				$this->manager->persist($sesion);	
+				$this->manager->flush();
+
+				$sesionid = $sesion->getId();
+
+				//GENERAR TOKEN JWT
+
+				$token = array(
+					"sub" => $user->getId(),
+					"email" => $user->getEmail(),
+					"nombre" => $user->getNombre(),
+					"idsesion" => $sesionid,
+					"isadmin" => $user->getIsadmin(),
+					"admin" => $user->getAdmin(),
+					"iat" => time(),
+					"exp" => time() + (900)
+				);	
+
+				$jwt = JWT::encode($token, $this->key, 'HS256');
+
+				$data = $jwt;			
+			}
+			else{
+				$data = array(
+					'status' => 'error',
+					'message' => 'User already logged'
+				);
+			}
 		}
 		else 
 		{
 			$data = array(
 				'status' => 'error',
-				'data' => 'Login failed!'
+				'message' => 'Login failed!'
 			);
 		}
 
@@ -91,7 +112,7 @@ class JwtAuth
 				"email" => $decoded->email,
 				"nombre" => $decoded->nombre,
 				"idsesion" => $decoded->idsesion,
-				"rol" => $decoded->rol,
+				"isadmin" => $decoded->isadmin,
 				"admin" => $decoded->admin,
 				"iat" => $decoded->iat,
 				"exp" => time() + (900)

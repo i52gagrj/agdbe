@@ -19,65 +19,88 @@ class UsuarioController extends Controller {
         $helpers = $this->get(Helpers::class);
         $jwt_auth = $this->get(JwtAuth::class);
 
-        $json = $request->get('json', null);
-        $params = json_decode($json);
+        $token = $request->get('authorization', null);
+		$authCheck = $jwt_auth->checkToken($token);	
 
-        $data = array(
-            'status' => 'error',
-            'code' => 400,
-            'msg' => 'User not created !!'
-        );    
-
-        if($json != null)
-        {        	
-        	$fechaalta = new \Datetime("now");
-        	$rol = (isset($params->rol)) ? $params->rol : null;
-        	$nombre = (isset($params->nombre)) ? $params->nombre : null;
-        	$email= (isset($params->email)) ? $params->email : null;
-        	$password = (isset($params->password)) ? $params->password : null;
-        }
-
-
-        $emailConstraint = new Assert\Email();
-        $emailConstraint->message = "This email is not valid!!";
-        $validate_email = $this->get("validator")->validate($email, $emailConstraint);
-
-        if($email !=null && count($validate_email) == 0 && $password != null && $nombre != null) 
+		$data = array(
+			'status' => 'error',
+			'code' => 405,
+			'msg' => 'Authorization not valid !!'
+		); 
+		
+        if($authCheck)
         {
+            $json = $request->get('json', null);
+            $params = json_decode($json);
+            $decode = $jwt_auth->decodeToken($token);
+                    
+            if($json != null)
+            {        	
+                $fechaalta = new \Datetime("now");        	
+                $nombre = (isset($params->nombre)) ? $params->nombre : null;
+                $email= (isset($params->email)) ? $params->email : null;
+                $password = (isset($params->password)) ? $params->password : null;
+                
+                $emailConstraint = new Assert\Email();
+                $emailConstraint->message = "This email is not valid!!";
+                $validate_email = $this->get("validator")->validate($email, $emailConstraint);
 
-        	$usuario = new Usuario();
-        	$usuario->setNombre($nombre);
-        	$usuario->setRol($rol);
-        	$usuario->setFechaalta($fechaalta);
-        	$usuario->setEmail($email);
+                if($email !=null && count($validate_email) == 0 && $password != null && $nombre != null) 
+                {
 
-        	$pwd = hash('sha256', $password);
-        	$usuario->setPassword($pwd);
+                    $usuario = new Usuario();
+                    $usuario->setNombre($nombre);
+                    $usuario->setIsadmin(false);
+                    $usuario->setFechaalta($fechaalta);
+                    $usuario->setEmail($email);
+                    $usuario->setAdmin($decode->sub);
 
-        	$em = $this->getDoctrine()->getManager();
-        	$isset_usuario = $em->getRepository('ModelBundle:Usuario')->findBy(array("email" => $email));
+                    $pwd = hash('sha256', $password);
+                    $usuario->setPassword($pwd);
 
-        	if(count($isset_usuario) == 0)
-        	{
-        		$em->persist($usuario);
-        		$em->flush();
+                    $em = $this->getDoctrine()->getManager();
+                    $isset_usuario = $em->getRepository('ModelBundle:Usuario')->findBy(array("email" => $email));
 
-		        $data = array(
-		            'status' => 'Success',
-		            'code' => 200,
-		            'msg' => 'New user created !!',
-		            'usuario' => $usuario
-		        );        		
-        	}
-        	else
-        	{
-		        $data = array(
-		            'status' => 'error',
-		            'code' => 400,
-		            'msg' => 'User not created, duplicated !!'
-		        );         		
-        	}
+                    if(count($isset_usuario) == 0)
+                    {
+                        $em->persist($usuario);
+                        $em->flush();
 
+                        $data = array(
+                            'status' => 'success',
+                            'code' => 200,
+                            'msg' => 'New user created !!',
+                            'usuario' => $usuario, 					
+                            'token' => $authCheck,
+                        );        		
+                    }
+                    else
+                    {
+                        $data = array(
+                            'status' => 'error',
+                            'code' => 400,
+                            'msg' => 'User not created, duplicated !!', 					
+                            'token' => $authCheck,
+                        );         		
+                    }
+
+                }else{
+                    $data = array(
+                        'status' => 'error',
+                        'code' => 400,
+                        'msg' => 'email, password or nombre not valid!!', 					
+						'token' => $authCheck,
+                    );                
+                }
+            }
+            else {
+                $data = array(
+                    'status' => 'error',
+                    'code' => 400,
+                    'msg' => 'Json null!!', 					
+                    'token' => $authCheck,
+                );
+            }
         }
 
         return $helpers->json($data);
@@ -101,10 +124,10 @@ class UsuarioController extends Controller {
                 'status' => 'error',
                 'code' => 400,
                 'msg' => 'User not updated !!'
-            );    
+            );               
+            $usuario->setIsadmin(false); 
             if($json != null)
-            {                           
-                $rol = (isset($params->rol)) ? $params->rol : null;
+            {                                           
                 $nombre = (isset($params->nombre)) ? $params->nombre : null;
                 $email= (isset($params->email)) ? $params->email : null;
                 $password = (isset($params->password)) ? $params->password : null;
@@ -116,8 +139,7 @@ class UsuarioController extends Controller {
                 $validate_email = $this->get("validator")->validate($email, $emailConstraint);              
                 if(count($validate_email)) $usuario->setEmail($email); 
             }
-            if($nombre != null) $usuario->setNombre($nombre);
-            if($rol != null)    $usuario->setRol($rol);                         
+            if($nombre != null) $usuario->setNombre($nombre);            
             if($password != null){
                 $pwd = hash('sha256', $password);
                 $usuario->setPassword($pwd);
@@ -158,63 +180,76 @@ class UsuarioController extends Controller {
 
     public function returnallclientsAction(Request $request) 
     {
-        // Devuelve todos los clientes de un administrador dado
-        /*
+        // Devuelve todos los clientes de un administrador dado       
 
         $helpers = $this->get(Helpers::class);
         $jwt_auth = $this->get(JwtAuth::class);
 
         $token = $request->get('authorization', null);
+		$authCheck = $jwt_auth->checkToken($token);
+		
 
-        $authCheck = $jwt_auth->checkToken($token);
+		$data = array(
+			'status' => 'error',
+			'code' => 405,
+			'msg' => 'Authorization not valid !!'
+		); 
+		
+        if($authCheck){		
+			$decode = $jwt_auth->decodeToken($token);
 
-        $data = array(
-            'status' => 'error',
-            'code' => 400,
-            'msg' => 'Document not created !!'
-        );         
+            if($decode->isadmin){
+				//Buscar los clientes del administrador
+				$em = $this->getDoctrine()->getManager();			
 
-        if($authCheck)
-        {   
-            $id=$request->get('iddocumento', null);
-            $em = $this->getDoctrine()->getManager();
-            $documento = $em->getRepository('ModelBundle:Documento')->find($id);
+				$dql = "SELECT u FROM ModelBundle:Usuario u WHERE u.admin = {$decode->sub}";
 
-            if($documento) {
-                $data = array(
-                    'status' => 'Success',
-                    'code' => 200,
-                    'msg' => 'Document recovered !!', 
-                    'authcheck' => $authCheck,
-                    'documento' => $documento
-                );                  
-            }
+				$query = $em->createQuery($dql);
 
-            else {
+				//Paginarlos
+				$page = $request->query->getInt('page', 1);
+				$paginator = $this->get('knp_paginator');
+				$items_per_page = 10;
+				$pagination = $paginator->paginate($query, $page, $items_per_page);
+				$total_items_count = $pagination->getTotalItemCount();			
+		
+				$documentos = $query->getResult();		
+				
+				$then = new \Datetime("+15 minutes");				
+
+				if($documentos){	
+					$data = array(
+						'status' => 'success',
+						'code' => 200,
+						'token' => $authCheck,                    
+						'total_items_count' => $total_items_count,
+						'page_actual' => $page,
+						'items_per_page' => $items_per_page,
+						'total_pages' => ceil($total_items_count / $items_per_page),
+						'data' => $pagination
+					);    
+				}else{
+					$data = array(
+						'status' => 'success',
+						'code' => 200,
+						'id' => $userid,
+						'token' => $authCheck,    
+						'data' => null,                
+						'message' => "No hay clientes de este administrador"
+					);    				
+				}
+                
+            }else{
+                $userid = null;
                 $data = array(
                     'status' => 'error',
                     'code' => 400,
-                    'msg' => 'Document not exist !!', 
-                    'authcheck' => $authCheck
-                );                                  
-            }                           
-        }               
-        
-        else
-        {
-            $data = array(
-                'status' => 'error',
-                'code' => 400,
-                'msg' => 'Authorization not valid'
-            );         
-        }   
+                    'msg' => 'User not admin !!'
+                ); 
+            }		
+		}
 
-        return $helpers->json($data);
-
-        */
-
-        echo "Hola mundo desde el controlador para listar Clientes";
-        die();      
+		return $helpers->json($data);
     }
 
     public function returnoneclientAction(Request $request) 

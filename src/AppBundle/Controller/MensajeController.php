@@ -121,7 +121,7 @@ class MensajeController extends Controller {
 			$id = $request->get('id', null);
 
 			if($id){
-				if($decode->rol=="admin"){
+				if($decode->isadmin){
 					$userid = $id;
 				}else{
 					$userid = null;
@@ -141,7 +141,7 @@ class MensajeController extends Controller {
 				$em = $this->getDoctrine()->getManager();			
 
 				$dql = "SELECT m FROM ModelBundle:Mensaje m "
-                	."WHERE m.emisor = $decode->sub OR m.receptor = $decode->sub "
+                	."WHERE m.emisor = $userid OR m.receptor = $userid "
 					."ORDER BY m.fechahora DESC";
 
 				$query = $em->createQuery($dql);
@@ -234,6 +234,77 @@ class MensajeController extends Controller {
 		return $helpers->json($data);		
 
 	}*/	
+
+	public function listnewAction(Request $request) {
+		// Devuelve el listado de todos los documentos de un cliente
+		// La idea es que devuelva la descripción y los datos, no la ruta!!
+
+		// Si se pasa el usuario como parametro, se devolverán los documentos del usuario (descripción y datos, no ruta)
+		// Esto serviria para que los administradores pasen el id de un usario y recuperen sus documentos
+		// Si no se pasa, se recupera el usario del token
+		// Esta manera servirá para que los usuarios recuperen el listado de sus documentos
+		
+        $helpers = $this->get(Helpers::class);
+        $jwt_auth = $this->get(JwtAuth::class);
+
+        $token = $request->get('authorization', null);
+		$authCheck = $jwt_auth->checkToken($token);
+		
+
+		$data = array(
+			'status' => 'error',
+			'code' => 405,
+			'msg' => 'Authorization not valid !!'
+		); 
+		
+        if($authCheck){		
+			$decode = $jwt_auth->decodeToken($authcheck);			
+
+			if($decode){
+				//Buscar los documentos creados por el usuario indicado, ordenados por fecha
+				$em = $this->getDoctrine()->getManager();			
+
+				$dql = "SELECT m FROM ModelBundle:Mensaje m "
+                	."WHERE m.receptor = $decode.sub AND m.visto = false "
+					."ORDER BY m.fechahora DESC";
+
+				$query = $em->createQuery($dql);
+
+				//Paginarlos
+				$page = $request->query->getInt('page', 1);
+				$paginator = $this->get('knp_paginator');
+				$items_per_page = 10;
+				$pagination = $paginator->paginate($query, $page, $items_per_page);
+				$total_items_count = $pagination->getTotalItemCount();			
+		
+				$mensajes = $query->getResult();				
+
+				if($mensajes){	
+					$data = array(
+						'status' => 'success',
+						'code' => 200,
+						'token' => $authCheck,                    
+						'total_items_count' => $total_items_count,
+						'page_actual' => $page,
+						'items_per_page' => $items_per_page,
+						'total_pages' => ceil($total_items_count / $items_per_page),
+						'data' => $pagination
+					);    
+				}else{
+					$data = array(
+						'status' => 'success',
+						'code' => 200,
+						'id' => $userid,
+						'token' => $authCheck,                    
+						'message' => "No hay mensajes"
+					);    				
+				}	
+			}		
+
+		}
+
+		return $helpers->json($data);	
+	}		
 
 	public function messageuserAction(Request $request) {
         $helpers = $this->get(Helpers::class);

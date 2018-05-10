@@ -7,3 +7,8 @@ usuario_edit:
     path: /edit
     defaults: { _controller: "AppBundle:Usuario:edit" }
     methods: POST
+
+returnallclients:
+    path: /returnallclients
+    defaults: { _controller: "AppBundle:Usuario:returnallclients" }
+    methods: POST

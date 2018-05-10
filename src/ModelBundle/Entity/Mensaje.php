@@ -49,6 +49,12 @@ class Mensaje
      */
     private $receptor;    
 
+    /**
+     * @var boolean
+     *
+     * @ORM\Column(name="visto", type="boolean")
+     */
+    private $visto;     
 
     /**
      * Get id
@@ -154,7 +160,31 @@ class Mensaje
     public function getReceptor()
     {
         return $this->receptor;
-    }      
+    }     
+    
+    /**
+     * Set visto
+     *
+     * @param boolean $visto
+     *
+     * @return Documento
+     */
+    public function setVisto($visto)
+    {
+        $this->visto = $visto;
+
+        return $this;
+    }
+
+    /**
+     * Get visto
+     *
+     * @return boolean
+     */
+    public function getVisto()
+    {
+        return $this->visto;
+    }     
 
     //ASOCIACIONES
 

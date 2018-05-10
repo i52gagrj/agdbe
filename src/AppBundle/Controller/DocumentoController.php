@@ -11,6 +11,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\HttpFoundation\File\File;
+use Symfony\Component\Filesystem\Filesystem;
 use ModelBundle\Entity\Usuario;
 use ModelBundle\Entity\Documento;
 use AppBundle\Services\Helpers;
@@ -67,7 +68,8 @@ class DocumentoController extends Controller {
 				$documento->setDescripcion($params->descripcion);
 				$documento->setTipo($tipo);				
 				$documento->setFechahora(new \Datetime("now"));
-				$documento->setUsuario($identity->getId());       
+				$documento->setUsuario($identity->getId());    
+				$documento->setVisto(false);  
 
 				$em = $this->getDoctrine()->getManager();
 				$em->persist($documento);
@@ -98,9 +100,6 @@ class DocumentoController extends Controller {
 				); 				
 			}
 		       		
-		}
-		else{
-
 		}
         
 		return $helpers->json($data);
@@ -136,9 +135,11 @@ class DocumentoController extends Controller {
 			$id = $request->get('id', null);
 
 			if($id){
-				if($decode->rol=="admin"){
+				$identity = $jwt_auth->returnUser($id);
+				if($identity && $decode->isadmin && $identity->getAdmin() == $decode->sub){
+
 					$userid = $id;
-					//FALTA CONFIRMAR QUE EL ADMINISTRADOR ES EL DEL USUARIO
+					
 				}else{
 					$userid = null;
 					$data = array(
@@ -209,6 +210,8 @@ class DocumentoController extends Controller {
 		// Esto serviria para que los administradores pasen el id de un usario y recuperen sus documentos
 		// Si no se pasa, se recupera el usario del token
 		// Esta manera servirá para que los usuarios recuperen el listado de sus documentos
+
+		// IMPLEMENTAR LA DESCARGA POR PARTE DE UN ADMIN
 		
         $helpers = $this->get(Helpers::class);
         $jwt_auth = $this->get(JwtAuth::class);
@@ -234,20 +237,19 @@ class DocumentoController extends Controller {
 				$documento = $em->getRepository('ModelBundle:Documento')->find($id);
 
 				if($documento){
-					if($decode->sub != $documento->getUsuario() && $decode->rol!="admin"){
+					if($decode->sub != $documento->getUsuario() && !$decode->isadmin){
 						$data = array(
 							'status' => 'error',
 							'code' => 400,
 							'msg' => 'User not admin !!'
 						);
 					}else{
-						$file = new File($this->getParameter('directorio_documentos').'/'.$documento->getRuta());
-						//$file = $this->getParameter('directorio_documentos').'/'.$documento->getRuta();
+						$file = new File($this->getParameter('directorio_documentos').'/'.$documento->getRuta());						
 						$data = array(
 							'status' => 'success',
 							'code' => 200,
 							'id' => $id,
-							'token' => $authCheck
+							'token' => $authCheck							
 						);   						
 					}	
 				}else{
@@ -268,9 +270,16 @@ class DocumentoController extends Controller {
 			}		
 
 		}
-
-		if($file){ return $this->file($file);}
-		else{ return $helpers->json($data);}
+				
+		if($file){ 
+			/*$mandar = new Response($data);
+			$mandar->headers->set('Content-Type', 'multipart/form-data');
+			return $mandar;*/
+			return $this->file($file);
+		}
+		else{ 
+			return $helpers->json($data);
+		}
 	}
 
 	public function deleteAction(Request $request) {		
@@ -304,8 +313,12 @@ class DocumentoController extends Controller {
 							'msg' => 'User not owner !!'
 						);
 					}else{
-						//Borrar documento
-						//Hay que implementar la eliminación del documento de la carpeta
+						//Borrar documento						
+						$filename = $this->getParameter('directorio_documentos').'/'.$documento->getRuta();
+
+						$filesystem = new Filesystem();
+						$filesystem->remove($filename);
+
 						$em->remove($documento);
 						$em->flush();
 						$data = array(
