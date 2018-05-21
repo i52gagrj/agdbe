@@ -130,7 +130,14 @@ class DefaultController extends Controller
 		
         if($authCheck){		
 			$jwt_auth->finsesion($token);            
-		}
+        }
+        else {
+            $data = array(
+                'status' => 'error',
+                'code' => 400,
+                'msg' => 'Authorization not valid'
+            );             
+        }
 
 		return $helpers->json($data);		
     }

@@ -40,9 +40,23 @@ class JwtAuth
 
 			$query = $this->manager->createQuery($dql);
 
-			$ultimotiempo = $query->getResult()[0]->getFin();
+			$cuenta = count($query);
 
-			if($query && $ultimotiempo < $now){
+			if(!count($query)){
+				$query = null;
+			}
+			
+			$data = array(
+				'status' => 'error',
+				'message' => 'Login failed!',
+				'query' => $query
+			);
+
+			if(isset($query)){
+				$ultimotiempo = $query->getResult()[0]->getFin();
+			}
+
+			if((isset($query) && $ultimotiempo < $now) || (!isset($query))){
 				//Generar sesion 						
 				$sesionid=0;
 
@@ -72,19 +86,15 @@ class JwtAuth
 				$jwt = JWT::encode($token, $this->key, 'HS256');
 
 				$data = $jwt;			
-			}
-			else{
-				$data = array(
-					'status' => 'error',
-					'message' => 'User already logged'
-				);
-			}
+			}					
+
 		}
 		else 
 		{
 			$data = array(
 				'status' => 'error',
-				'message' => 'Login failed!'
+				'message' => 'Login failed!',
+				'user' => $user
 			);
 		}
 
@@ -183,6 +193,8 @@ class JwtAuth
 		
 		$now = time();
 
+		$retorno = null;
+
         if(isset($decoded) && is_object($decoded) && isset($decoded->sub) && $decoded->exp > $now ){
 			$em = $this->manager;
 			$sesion = $em->getRepository('ModelBundle:Sesion')->find($decoded->idsesion);
@@ -190,8 +202,11 @@ class JwtAuth
 			$em->persist($sesion);
 			$em->flush();
 		}	
+		else{
+			$retorno = 1;
+		}
 
-       	return null;		
+       	return $retorno;		
 	}
 }
 

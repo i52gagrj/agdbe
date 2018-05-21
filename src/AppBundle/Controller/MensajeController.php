@@ -51,6 +51,7 @@ class MensajeController extends Controller {
 					$mensaje->setFechahora($creacion);
 					$mensaje->setEmisor($emisor);
 					$mensaje->setReceptor($receptor);
+					$mensaje->setVisto(false);
 
 					// Crear conexion a base de datos
 					$em = $this->getDoctrine()->getManager();			
@@ -111,8 +112,8 @@ class MensajeController extends Controller {
 
 		$data = array(
 			'status' => 'error',
-			'code' => 405,
-			'msg' => 'Authorization not valid !!'
+			'code' => 400,
+			'msg' => 'Id not valid !!'
 		); 
 		
         if($authCheck){		
@@ -135,8 +136,7 @@ class MensajeController extends Controller {
 				$userid = $decode->sub;
 			}
 				
-
-			if($userid){
+			if(($id && $decode->isadmin) || ($userid && !$decode->isadmin)){
 				//Buscar los documentos creados por el usuario indicado, ordenados por fecha
 				$em = $this->getDoctrine()->getManager();			
 
@@ -175,81 +175,34 @@ class MensajeController extends Controller {
 						'message' => "No hay mensajes"
 					);    				
 				}	
-			}		
+			}else {
+				$data = array(
+					'status' => 'error',
+					'code' => 400,
+					'token' => $authCheck,
+					'data' => null,
+					'msg' => 'user admin, id not provided !!'
+				); 				
+			}	
 
+		}else {
+			$data = array(
+				'status' => 'error',
+				'code' => 405,
+				'msg' => 'Authorization not valid !!'
+			); 
 		}
 
 		return $helpers->json($data);	
 	}	
 
-	/*public function listallAction(Request $request) {
-        $helpers = $this->get(Helpers::class);
-        $jwt_auth = $this->get(JwtAuth::class);
-
-        $token = $request->get('authorization', null);
-		$authCheck = $jwt_auth->checkToken($token);
-
-		$data = array(
-			'status' => 'error',
-			'code' => 400,
-			'msg' => 'Authorization not valid !!'
-		); 
-		
-        if($authCheck){		
-			$decode = $jwt_auth->decodeToken($token);
-			$identity = $jwt_auth->returnUser($decode->sub);				
-			
-			//Buscar los mensajes enviados y recibidos por el usuario identificado, ordenados por fecha
-			
-			$em = $this->getDoctrine()->getManager();			
-
-			$dql = "SELECT m FROM ModelBundle:Mensaje m "
-                ."WHERE m.emisor = $decode->sub OR m.receptor = $decode->sub "
-				."ORDER BY m.fechahora ASC";
-
-			$query = $em->createQuery($dql);
-	
-			$mensajes = $query->getResult();
-
-			//FALTARIA PAGINARLOS
-
-			if($mensajes){	
-				$data = array(
-					'status' => 'success',
-					'code' => 200, 
-					'token' => $authCheck,                   
-					'mensajes' => $mensajes
-				);    
-			}else{
-				$data = array(
-					'status' => 'success',
-					'code' => 200, 
-					'token' => $authCheck,                                       
-					'mensajes' => "No hay mensajes"
-				);    				
-			}			
-
-		}
-
-		return $helpers->json($data);		
-
-	}*/	
-
 	public function listnewAction(Request $request) {
-		// Devuelve el listado de todos los documentos de un cliente
-		// La idea es que devuelva la descripción y los datos, no la ruta!!
-
-		// Si se pasa el usuario como parametro, se devolverán los documentos del usuario (descripción y datos, no ruta)
-		// Esto serviria para que los administradores pasen el id de un usario y recuperen sus documentos
-		// Si no se pasa, se recupera el usario del token
-		// Esta manera servirá para que los usuarios recuperen el listado de sus documentos
 		
         $helpers = $this->get(Helpers::class);
         $jwt_auth = $this->get(JwtAuth::class);
 
         $token = $request->get('authorization', null);
-		$authCheck = $jwt_auth->checkToken($token);
-		
+		$authCheck = $jwt_auth->checkToken($token);		
 
 		$data = array(
 			'status' => 'error',
@@ -258,14 +211,13 @@ class MensajeController extends Controller {
 		); 
 		
         if($authCheck){		
-			$decode = $jwt_auth->decodeToken($authcheck);			
+			$decode = $jwt_auth->decodeToken($authCheck);			
 
-			if($decode){
-				//Buscar los documentos creados por el usuario indicado, ordenados por fecha
+			if($decode){				
 				$em = $this->getDoctrine()->getManager();			
 
 				$dql = "SELECT m FROM ModelBundle:Mensaje m "
-                	."WHERE m.receptor = $decode.sub AND m.visto = false "
+                	."WHERE m.receptor = $decode->sub AND m.visto = false "
 					."ORDER BY m.fechahora DESC";
 
 				$query = $em->createQuery($dql);
@@ -331,13 +283,13 @@ class MensajeController extends Controller {
 
 			$dql = "SELECT m FROM ModelBundle:Mensaje m "
                 ."WHERE m.emisor = $id OR m.receptor = $id "
-				."ORDER BY m.fechahora ASC";
+				."ORDER BY m.fechahora DESC";
 
 			$query = $em->createQuery($dql);
 	
 			$mensajes = $query->getResult();
 
-			//FALTARIA PAGINARLOS
+			//PAGINARLOS
 
 			if($mensajes){	
 				$data = array(

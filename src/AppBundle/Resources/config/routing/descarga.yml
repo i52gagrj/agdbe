@@ -1,4 +1,4 @@
-descarga_new:
-    path: /new
-    defaults: { _controller: "AppBundle:Descarga:new" }
+descarga_alldescargas:
+    path: /listall
+    defaults: { _controller: "AppBundle:Descarga:listall" }
     methods: POST

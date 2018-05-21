@@ -6,9 +6,14 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\HttpFoundation\File\File;
+use Symfony\Component\Filesystem\Filesystem;
 use ModelBundle\Entity\Usuario;
 use ModelBundle\Entity\Modelo;
+use ModelBundle\Entity\Descarga;
 use AppBundle\Services\Helpers;
 use AppBundle\Services\JwtAuth;
 
@@ -120,13 +125,12 @@ class ModeloController extends Controller {
 
 	
 	public function listallAction(Request $request) {
-		// Devuelve el listado de todos los documentos de un cliente
-		// La idea es que devuelva la descripción y los datos, no la ruta!!
+		// Devuelve el listado de todos los modelos de un cliente		
 
-		// Si se pasa el usuario como parametro, se devolverán los documentos del usuario (descripción y datos, no ruta)
-		// Esto serviria para que los administradores pasen el id de un usario y recuperen sus documentos
+		// Si se pasa el usuario como parametro, se devolverán los modelos del usuario (descripción y datos, no ruta)
+		// Esto serviria para que los administradores pasen el id de un usario y recuperen sus modelos
 		// Si no se pasa, se recupera el usario del token
-		// Esta manera servirá para que los usuarios recuperen el listado de sus documentos
+		// Esta manera servirá para que los usuarios recuperen el listado de sus modelos
 		
         $helpers = $this->get(Helpers::class);
         $jwt_auth = $this->get(JwtAuth::class);
@@ -163,7 +167,7 @@ class ModeloController extends Controller {
 				
 
 			if($userid){
-				//Buscar los documentos pertenecientes al usuario indicado, ordenados por fecha
+				//Buscar los modelos pertenecientes al usuario indicado, ordenados por fecha
 				$em = $this->getDoctrine()->getManager();			
 
 				$dql = "SELECT m FROM ModelBundle:Modelo m WHERE m.usuario = {$userid} ORDER BY m.fechahora ASC";
@@ -177,9 +181,9 @@ class ModeloController extends Controller {
 				$pagination = $paginator->paginate($query, $page, $items_per_page);
 				$total_items_count = $pagination->getTotalItemCount();			
 		
-				$documentos = $query->getResult();				
+				$modelos = $query->getResult();				
 
-				if($documentos){	
+				if($modelos){	
 					$data = array(
 						'status' => 'success',
 						'code' => 200,
@@ -205,81 +209,79 @@ class ModeloController extends Controller {
 
 		return $helpers->json($data);	
 	}	
-	/*public function listallAction(Request $request) {
-		// Devuelve el listado de todos los modelos de un cliente
-		// La idea es que devuelva la descripción y los datos, no la ruta!!
 
-		// Si se pasa el usuario como parametro, se devolverán los modelos del usuario (descripción y datos, no ruta)
-		// Esto serviria para que los administradores pasen el id de un usuario y recuperen sus modelos
-		// Si no se pasa, se recupera el usario del token
-		// Esta manera servirá para que los usuarios recuperen el listado de sus modelos
-		
-        $helpers = $this->get(Helpers::class);
+	 
+	public function returnoneAction(Request $request) {		
+		$helpers = $this->get(Helpers::class);
         $jwt_auth = $this->get(JwtAuth::class);
 
         $token = $request->get('authorization', null);
 		$authCheck = $jwt_auth->checkToken($token);
-		$decoded = $jwt_auth->decodeToken($token);
-		$identity = $jwt_auth->returnUser($decoded->sub);
-		$id = $request->get('id', null);
-
-		if($id && $ !decoded->isadmin){
-			$authCheck = null;
-		}
-
-		if(!$id){
-			$id = ($jwt_auth->decodeToken($token))->sub;
-		}
-
+		$file = null;
+		
 		$data = array(
 			'status' => 'error',
-			'code' => 400,
+			'code' => 405,
 			'msg' => 'Authorization not valid !!'
 		); 
 		
         if($authCheck){		
-			//$decode = $jwt_auth->decodeToken($token);
-			//$identity = $jwt_auth->returnUser($decode->sub);				
-			
-			//Buscar los modelos asignado al usuario indicado, ordenados por fecha		
-			$em = $this->getDoctrine()->getManager();			
+			$decode = $jwt_auth->decodeToken($token);
+	        $id = $request->get('id', null);
 
-			$dql = "SELECT m FROM ModelBundle:Modelo m "
-                ."WHERE m.usuario = $id"
-				."ORDER BY m.fechahora ASC";
+			if($id){
+				// Buscar el modelo indicado				
+				$em = $this->getDoctrine()->getManager();			
+					
+				$modelo = $em->getRepository('ModelBundle:Modelo')->find($id);
 
-			$query = $em->createQuery($dql);
-	
-			$modelos = $query->getResult();
+				if($modelo){
+					if($decode->sub != $modelo->getUsuario() && !$decode->isadmin){
+						$data = array(
+							'status' => 'error',
+							'code' => 400,
+							'msg' => 'User not admin !!'
+						);
+					}else{
+						$file = new File($this->getParameter('directorio_modelos').'/'.$modelo->getRuta());	
+						
+						$descarga = new Descarga;
 
-			//FALTARIA PAGINARLOS
+						$descarga->setFechahora(new \Datetime("now"));
+						$descarga->setUsuario($decode->sub);
+						$descarga->setModelo($id);
 
-			if($modelos){	
-				$data = array(
-					'status' => 'success',
-					'code' => 200,
-					'token' => $authCheck,                    
-					'modelos' => $modelos
-				);    
+						$em->persist($descarga);
+						$em->flush();					
+					}	
+				}else{
+					$data = array(
+						'status' => 'success',
+						'code' => 200,
+						'id' => $id,
+						'token' => $authCheck,                    
+						'message' => "El modelo no existe"
+					);    				
+				}	
 			}else{
 				$data = array(
-					'status' => 'success',
-					'code' => 200,
-					'token' => $authCheck,                    
-					'modelos' => "No hay modelos"
-				);    				
-			}			
+					'status' => 'error',
+					'code' => 400,
+					'msg' => 'id not send !!'
+				);				
+			}		
 
 		}
-
-		return $helpers->json($data);	
-	}*/
-	
-
-	 
-	public function returnoneAction(Request $request) {		
-		echo "Hola mundo desde el controlador de devolver un modelo";
-		die();		
+				
+		if($file){ 
+			//$mandar = new Response($data);
+			//$mandar->headers->set('Content-Type', 'multipart/form-data');
+			//return $mandar;
+			return $this->file($file);
+		}
+		else{ 
+			return $helpers->json($data);
+		}	
 	}	
 
 }	

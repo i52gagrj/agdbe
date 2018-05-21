@@ -59,35 +59,45 @@ class DocumentoController extends Controller {
 				  * @var UploadedFile $fichero;
 				  */ 				
 				$fichero = $uploadedFichero;
-				$tipo = $fichero->guessExtension();
-				$nombrefichero=md5(uniqid()).'.'.$tipo;
-				$fichero->move($this->getParameter('directorio_documentos'),$nombrefichero);
-			
-				$documento = new Documento();
-				$documento->setRuta($nombrefichero);
-				$documento->setDescripcion($params->descripcion);
-				$documento->setTipo($tipo);				
-				$documento->setFechahora(new \Datetime("now"));
-				$documento->setUsuario($identity->getId());    
-				$documento->setVisto(false);  
+				if($fichero!=""){
+					$tipo = $fichero->guessExtension();
+					$nombrefichero=md5(uniqid()).'.'.$tipo;
+					$fichero->move($this->getParameter('directorio_documentos'),$nombrefichero);
+				
+					$documento = new Documento();
+					$documento->setRuta($nombrefichero);
+					$documento->setDescripcion($params->descripcion);
+					$documento->setTipo($tipo);				
+					$documento->setFechahora(new \Datetime("now"));
+					$documento->setUsuario($identity->getId());    
+					$documento->setVisto(false);  
 
-				$em = $this->getDoctrine()->getManager();
-				$em->persist($documento);
-				$em->flush();   
-				
-				$datosdocumento = array(
-					'Id' => $documento->getId(),
-					'Descripcion' => $documento->getDescripcion(),					
-					'Tipo' => $documento->getTipo()
-				);
-				
-				$data = array(
-					'status' => 'success',
-					'code' => 200, 					
-					'token' => $authCheck,
-					'msg' => 'New Document created!!',
-					'documento' => $documento
-				);    
+					$em = $this->getDoctrine()->getManager();
+					$em->persist($documento);
+					$em->flush();   
+					
+					$datosdocumento = array(
+						'Id' => $documento->getId(),
+						'Descripcion' => $documento->getDescripcion(),					
+						'Tipo' => $documento->getTipo()
+					);
+					
+					$data = array(
+						'status' => 'success',
+						'code' => 200, 					
+						'token' => $authCheck,
+						'msg' => 'New Document created!!',
+						'documento' => $documento
+					);   
+				}else{
+					$data = array(
+						'status' => 'error',
+						'code' => 400,
+						'token' => $authCheck,
+						'msg' => 'File too big',
+						'token' => $token
+					);  					
+				}
 			}
 			else
 			{
@@ -153,7 +163,7 @@ class DocumentoController extends Controller {
 			}
 				
 
-			if($userid){
+			if(($id && $decode->isadmin) || ($userid && !$decode->isadmin)){
 				//Buscar los documentos creados por el usuario indicado, ordenados por fecha
 				$em = $this->getDoctrine()->getManager();			
 
@@ -193,6 +203,14 @@ class DocumentoController extends Controller {
 						'message' => "No hay documentos"
 					);    				
 				}	
+			}else {
+				$data = array(
+					'status' => 'error',
+					'code' => 400,
+					'token' => $authCheck,
+					'data' => null,
+					'msg' => 'user admin, id not provided !!'
+				); 				
 			}		
 
 		}
@@ -249,8 +267,10 @@ class DocumentoController extends Controller {
 							'status' => 'success',
 							'code' => 200,
 							'id' => $id,
-							'token' => $authCheck							
-						);   						
+							'token' => $authCheck,
+							'file' => $file
+						);   	
+						//$data = $helpers->json($data2);						
 					}	
 				}else{
 					$data = array(
@@ -272,9 +292,9 @@ class DocumentoController extends Controller {
 		}
 				
 		if($file){ 
-			/*$mandar = new Response($data);
-			$mandar->headers->set('Content-Type', 'multipart/form-data');
-			return $mandar;*/
+			//$mandar = new Response($data);
+			//$mandar->headers->set('Content-Type', 'multipart/form-data');
+			//return $mandar;
 			return $this->file($file);
 		}
 		else{ 
@@ -349,5 +369,88 @@ class DocumentoController extends Controller {
 		}
 
 		return $helpers->json($data);		
+	}	
+
+	public function listnewAction(Request $request) {
+		// Devuelve el listado de todos los documentos de un cliente
+		// La idea es que devuelva la descripción y los datos, no la ruta!!
+
+		// Si se pasa el usuario como parametro, se devolverán los documentos del usuario (descripción y datos, no ruta)
+		// Esto serviria para que los administradores pasen el id de un usario y recuperen sus documentos
+		// Si no se pasa, se recupera el usario del token
+		// Esta manera servirá para que los usuarios recuperen el listado de sus documentos
+		
+        $helpers = $this->get(Helpers::class);
+        $jwt_auth = $this->get(JwtAuth::class);
+
+        $token = $request->get('authorization', null);
+		$authCheck = $jwt_auth->checkToken($token);
+
+		$data = array(
+			'status' => 'error',
+			'code' => 405,
+			'msg' => 'Authorization not valid !!'
+		); 
+		
+        if($authCheck){		
+			$decode = $jwt_auth->decodeToken($token);
+			$identity = $jwt_auth->returnUser($decode->sub);									
+			//$id = $request->get('id', null);
+
+			if($decode->isadmin){				
+				//Buscar los documentos creados por el usuario indicado, ordenados por fecha
+				$em = $this->getDoctrine()->getManager();			
+
+				$id = $decode->sub;
+
+				$dql = "SELECT d FROM ModelBundle:Documento d WHERE d.usuario in "
+					."(SELECT u.id FROM ModelBundle:Usuario u WHERE u.admin = $id)"
+					." AND d.visto = false ORDER BY d.id DESC";
+
+				$query = $em->createQuery($dql);
+
+				//Paginarlos
+				$page = $request->query->getInt('page', 1);
+				$paginator = $this->get('knp_paginator');
+				$items_per_page = 10;
+				$pagination = $paginator->paginate($query, $page, $items_per_page);
+				$total_items_count = $pagination->getTotalItemCount();			
+		
+				$documentos = $query->getResult();		
+				
+				$then = new \Datetime("+15 minutes");				
+
+				if($documentos){	
+					$data = array(
+						'status' => 'success',
+						'code' => 200,
+						'token' => $authCheck,                    
+						'total_items_count' => $total_items_count,
+						'page_actual' => $page,
+						'items_per_page' => $items_per_page,
+						'total_pages' => ceil($total_items_count / $items_per_page),
+						'data' => $pagination
+					);    
+				}else{
+					$data = array(
+						'status' => 'success',
+						'code' => 200,
+						'id' => $userid,
+						'token' => $authCheck,    
+						'data' => null,                
+						'message' => "No hay documentos"
+					);    				
+				}				
+			}else{
+				$data = array(
+					'status' => 'error',
+					'code' => 400,
+					'msg' => 'User not admin !!'
+				);				
+			}
+
+		}
+
+		return $helpers->json($data);	
 	}	
 }

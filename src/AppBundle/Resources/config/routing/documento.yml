@@ -17,3 +17,8 @@ documento_delete:
     path: /delete
     defaults: { _controller: "AppBundle:Documento:delete" }
     methods: POST        
+
+documento_listnew:
+    path: /listnew
+    defaults: { _controller: "AppBundle:Documento:listnew" }
+    methods: POST     

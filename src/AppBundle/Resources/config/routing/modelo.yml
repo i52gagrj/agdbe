@@ -6,4 +6,9 @@ modelo_new:
 modelo_listall:
     path: /listall
     defaults: { _controller: "AppBundle:Modelo:listall" }
-    methods: POST    
+    methods: POST   
+
+modelo_returnone:
+    path: /returnone
+    defaults: { _controller: "AppBundle:Modelo:returnone" }
+    methods: POST       

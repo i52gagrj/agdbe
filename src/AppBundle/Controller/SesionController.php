@@ -13,19 +13,21 @@ use AppBundle\Services\JwtAuth;
 
 class SesionController extends Controller {
 
-	public function newAction(Request $request) {
-		//NO NECESARIA. La sesión se crea y almacena al realizarse el login
-		echo "Hola mundo desde el controlador de Sesion";
-		die();
-	}	
+	public function listallAction(Request $request) {
+		// Devuelve el listado de todos los documentos de un cliente
+		// La idea es que devuelva la descripción y los datos, no la ruta!!
 
-	public function allsessionsAction(Request $request) {
+		// Si se pasa el usuario como parametro, se devolverán los documentos del usuario (descripción y datos, no ruta)
+		// Esto serviria para que los administradores pasen el id de un usario y recuperen sus documentos
+		// Si no se pasa, se recupera el usario del token
+		// Esta manera servirá para que los usuarios recuperen el listado de sus documentos
+		
         $helpers = $this->get(Helpers::class);
         $jwt_auth = $this->get(JwtAuth::class);
 
-		$token = $request->get('authorization', null);
-		$id = $request->get('id', null);
+        $token = $request->get('authorization', null);
 		$authCheck = $jwt_auth->checkToken($token);
+		
 
 		$data = array(
 			'status' => 'error',
@@ -35,43 +37,83 @@ class SesionController extends Controller {
 		
         if($authCheck){		
 			$decode = $jwt_auth->decodeToken($token);
-			//$identity = $jwt_auth->returnUser($decode->sub);				
+			//$identity = $jwt_auth->returnUser($decode->sub);						
+			$id = $request->get('id', null);
 
-			/*
-			Buscar los mensajes enviados y recibidos por el usuario identificado, ordenados por fecha
-			*/
-			$em = $this->getDoctrine()->getManager();			
+			if($id){
+				$identity = $jwt_auth->returnUser($id);
+				if($identity && $decode->isadmin && $identity->getAdmin() == $decode->sub){
 
-			$dql = "SELECT s FROM ModelBundle:Sesion s "
-                ."WHERE s.usuario = $id "
-				."ORDER BY s.inicio ASC";
+					$userid = $id;
+					
+				}else{
+					$userid = null;
+					$data = array(
+						'status' => 'error',
+						'code' => 400,
+						'msg' => 'User not admin !!'
+					); 
+				}
+			}else{
+				$userid = null;				
+			}
+				
 
-			$query = $em->createQuery($dql);
-	
-			$sesiones = $query->getResult();
+			if($userid){
+				//Buscar las sesiones iniciadas por el usuario indicado, ordenadas por fecha
+				$em = $this->getDoctrine()->getManager();			
 
-			//FALTARIA PAGINARLOS
+				$dql = "SELECT s FROM ModelBundle:Sesion s "
+                ."WHERE s.usuario = $userid "
+				."ORDER BY s.inicio DESC";
 
-			if($sesiones){	
-				$data = array(
-					'status' => 'success',
-					'code' => 200, 
-					'token' => $authCheck,                   
-					'sesiones' => $sesiones
-				);    
+				$query = $em->createQuery($dql);
+
+				//Paginarlos
+				$page = $request->query->getInt('page', 1);
+				$paginator = $this->get('knp_paginator');
+				$items_per_page = 10;
+				$pagination = $paginator->paginate($query, $page, $items_per_page);
+				$total_items_count = $pagination->getTotalItemCount();			
+		
+				$documentos = $query->getResult();		
+				
+				$then = new \Datetime("+15 minutes");				
+
+				if($documentos){	
+					$data = array(
+						'status' => 'success',
+						'code' => 200,
+						'token' => $authCheck,                    
+						'total_items_count' => $total_items_count,
+						'page_actual' => $page,
+						'items_per_page' => $items_per_page,
+						'total_pages' => ceil($total_items_count / $items_per_page),
+						'data' => $pagination
+					);    
+				}else{
+					$data = array(
+						'status' => 'success',
+						'code' => 200,
+						'id' => $userid,
+						'token' => $authCheck,    
+						'data' => null,                
+						'message' => "No hay sesiones"
+					);    				
+				}	
 			}else{
 				$data = array(
-					'status' => 'success',
-					'code' => 200, 
-					'token' => $authCheck,                                       
-					'sesiones' => "No hay sesiones"
-				);    				
-			}			
+					'status' => 'error',
+					'code' => 400,
+					'token' => $authCheck,
+					'data' => null,
+					'msg' => 'id not provided !!'
+				); 					
+			}	
 
 		}
 
-		return $helpers->json($data);		
-
-	}
+		return $helpers->json($data);	
+	}	
 
 }

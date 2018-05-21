@@ -11,4 +11,9 @@ mensaje_listall:
 mensaje_user:
     path: /messageuser
     defaults: { _controller: "AppBundle:Mensaje:messageuser" }
-    methods: POST        
+    methods: POST    
+    
+mensaje_listnew:
+    path: /listnew
+    defaults: { _controller: "AppBundle:Mensaje:listnew" }
+    methods: POST       
