@@ -38,21 +38,21 @@ class JwtAuth
 				."WHERE s.usuario = $uid "
 				."ORDER BY s.fin DESC";
 
-			$query = $this->manager->createQuery($dql);
+			$query = $this->manager->createQuery($dql);	
+			$vacio = $query->getResult();
 
-			$cuenta = count($query);
-
-			if(!count($query)){
+			if(empty($vacio)){
 				$query = null;
 			}
 			
 			$data = array(
 				'status' => 'error',
 				'message' => 'Login failed!',
-				'query' => $query
-			);
-
-			if(isset($query)){
+				'query' => $query,
+				'vacio' => $vacio,
+				'vacio2' => empty($vacio)
+			);			
+			if($query){
 				$ultimotiempo = $query->getResult()[0]->getFin();
 			}
 
@@ -86,7 +86,7 @@ class JwtAuth
 				$jwt = JWT::encode($token, $this->key, 'HS256');
 
 				$data = $jwt;			
-			}					
+			}				
 
 		}
 		else 

@@ -170,29 +170,31 @@ class ModeloController extends Controller {
 				//Buscar los modelos pertenecientes al usuario indicado, ordenados por fecha
 				$em = $this->getDoctrine()->getManager();			
 
-				$dql = "SELECT m FROM ModelBundle:Modelo m WHERE m.usuario = {$userid} ORDER BY m.fechahora ASC";
+				$dql = "SELECT m.id, m.descripcion, m.codigo, m.trimestre, m.ejercicio, m.ruta, m.fechahora, m.tipo, u.nombre as usuario "
+				."FROM ModelBundle:Modelo m, ModelBundle:Usuario u "
+				."WHERE m.usuario = {$userid} "
+				."AND m.usuario = u.id "
+				."ORDER BY m.fechahora ASC";
 
 				$query = $em->createQuery($dql);
 
 				//Paginarlos
-				$page = $request->query->getInt('page', 1);
+				/*$page = $request->query->getInt('page', 1);
 				$paginator = $this->get('knp_paginator');
 				$items_per_page = 10;
 				$pagination = $paginator->paginate($query, $page, $items_per_page);
-				$total_items_count = $pagination->getTotalItemCount();			
-		
-				$modelos = $query->getResult();				
+				$total_items_count = $pagination->getTotalItemCount();*/									
 
-				if($modelos){	
+				if($query->getResult()){	
 					$data = array(
 						'status' => 'success',
 						'code' => 200,
 						'token' => $authCheck,                    
-						'total_items_count' => $total_items_count,
+						/*'total_items_count' => $total_items_count,
 						'page_actual' => $page,
 						'items_per_page' => $items_per_page,
-						'total_pages' => ceil($total_items_count / $items_per_page),
-						'data' => $pagination
+						'total_pages' => ceil($total_items_count / $items_per_page),*/
+						'data' => $query->getResult()
 					);    
 				}else{
 					$data = array(

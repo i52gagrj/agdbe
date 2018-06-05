@@ -61,33 +61,35 @@ class DescargaController extends Controller {
 				//Buscar las sesiones iniciadas por el usuario indicado, ordenadas por fecha
 				$em = $this->getDoctrine()->getManager();			
 
-				$dql = "SELECT d FROM ModelBundle:Descarga d "
-                ."WHERE d.usuario = $userid "
+				$dql = "SELECT d.id, d.fechahora, m.descripcion, m.codigo, m.trimestre, m.ejercicio, m.tipo " 
+				."FROM ModelBundle:Descarga d, ModelBundle:Modelo m "
+				."WHERE d.usuario = $userid "
+				."AND d.modelo = m.id "
 				."ORDER BY d.fechahora DESC";
 
 				$query = $em->createQuery($dql);
 
 				//Paginarlos
-				$page = $request->query->getInt('page', 1);
+				/*$page = $request->query->getInt('page', 1);
 				$paginator = $this->get('knp_paginator');
 				$items_per_page = 10;
 				$pagination = $paginator->paginate($query, $page, $items_per_page);
-				$total_items_count = $pagination->getTotalItemCount();			
+				$total_items_count = $pagination->getTotalItemCount();*/
 		
 				$documentos = $query->getResult();		
 				
 				$then = new \Datetime("+15 minutes");				
 
-				if($documentos){	
+				if($query->getResult()){	
 					$data = array(
 						'status' => 'success',
 						'code' => 200,
-						'token' => $authCheck,                    
+						'token' => $authCheck,/*                    
 						'total_items_count' => $total_items_count,
 						'page_actual' => $page,
 						'items_per_page' => $items_per_page,
-						'total_pages' => ceil($total_items_count / $items_per_page),
-						'data' => $pagination
+						'total_pages' => ceil($total_items_count / $items_per_page),*/
+						'data' => $query->getResult()
 					);    
 				}else{
 					$data = array(

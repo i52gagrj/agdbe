@@ -6,14 +6,19 @@ mensaje_new:
 mensaje_listall:
     path: /listall
     defaults: { _controller: "AppBundle:Mensaje:listall" }
-    methods: POST    
+    methods: POST
 
-mensaje_user:
-    path: /messageuser
-    defaults: { _controller: "AppBundle:Mensaje:messageuser" }
-    methods: POST    
-    
 mensaje_listnew:
     path: /listnew
     defaults: { _controller: "AppBundle:Mensaje:listnew" }
-    methods: POST       
+    methods: POST     
+
+mensaje_cambiarestado:
+    path: /cambiarestado
+    defaults: { _controller: "AppBundle:Mensaje:cambiarestado" }
+    methods: POST     
+
+mensaje_messageuser:
+    path: /messageuser
+    defaults: { _controller: "AppBundle:Mensaje:messageuser" }
+    methods: POST           

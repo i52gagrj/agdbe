@@ -167,37 +167,37 @@ class DocumentoController extends Controller {
 				//Buscar los documentos creados por el usuario indicado, ordenados por fecha
 				$em = $this->getDoctrine()->getManager();			
 
-				$dql = "SELECT d FROM ModelBundle:Documento d WHERE d.usuario = {$userid} ORDER BY d.fechahora DESC";
+				$dql = "SELECT d.id, d.descripcion, d.fechahora, d.tipo, d.visto "
+				."FROM ModelBundle:Documento d "
+				."WHERE d.usuario = {$userid} "
+				."ORDER BY d.fechahora DESC";
 
 				$query = $em->createQuery($dql);
 
 				//Paginarlos
-				$page = $request->query->getInt('page', 1);
+				/*$page = $request->query->getInt('page', 1);
 				$paginator = $this->get('knp_paginator');
 				$items_per_page = 10;
 				$pagination = $paginator->paginate($query, $page, $items_per_page);
-				$total_items_count = $pagination->getTotalItemCount();			
+				$total_items_count = $pagination->getTotalItemCount();*/
 		
-				$documentos = $query->getResult();		
-				
-				$then = new \Datetime("+15 minutes");				
+				$documentos = $query->getResult();						
 
 				if($documentos){	
 					$data = array(
 						'status' => 'success',
 						'code' => 200,
 						'token' => $authCheck,                    
-						'total_items_count' => $total_items_count,
+						/*'total_items_count' => $total_items_count,
 						'page_actual' => $page,
 						'items_per_page' => $items_per_page,
-						'total_pages' => ceil($total_items_count / $items_per_page),
-						'data' => $pagination
+						'total_pages' => ceil($total_items_count / $items_per_page),*/
+						'data' => $documentos
 					);    
 				}else{
 					$data = array(
 						'status' => 'success',
 						'code' => 200,
-						'id' => $userid,
 						'token' => $authCheck,    
 						'data' => null,                
 						'message' => "No hay documentos"
@@ -216,8 +216,7 @@ class DocumentoController extends Controller {
 		}
 
 		return $helpers->json($data);	
-	}
-		 
+	}		 
 
 
 	public function returnoneAction(Request $request) {		
@@ -302,6 +301,7 @@ class DocumentoController extends Controller {
 		}
 	}
 
+
 	public function deleteAction(Request $request) {		
 		$helpers = $this->get(Helpers::class);
         $jwt_auth = $this->get(JwtAuth::class);
@@ -371,6 +371,7 @@ class DocumentoController extends Controller {
 		return $helpers->json($data);		
 	}	
 
+	
 	public function listnewAction(Request $request) {
 		// Devuelve el listado de todos los documentos de un cliente
 		// La idea es que devuelva la descripción y los datos, no la ruta!!
@@ -403,39 +404,46 @@ class DocumentoController extends Controller {
 
 				$id = $decode->sub;
 
-				$dql = "SELECT d FROM ModelBundle:Documento d WHERE d.usuario in "
-					."(SELECT u.id FROM ModelBundle:Usuario u WHERE u.admin = $id)"
-					." AND d.visto = false ORDER BY d.id DESC";
+				/*$dql = "SELECT d.id, d.descripcion, d.tipo, d.usuario, d.fechahora, d.visto " 
+					."FROM ModelBundle:Documento d " 
+					."WHERE d.usuario in "
+					."(SELECT u.id FROM ModelBundle:Usuario u WHERE u.admin = $id) "
+					."AND d.visto = false ORDER BY d.id DESC";*/
 
-				$query = $em->createQuery($dql);
+				$dql = "SELECT d.id, d.descripcion, d.fechahora, d.tipo, d.visto, u2.nombre" 
+					." FROM ModelBundle:Documento d, ModelBundle:Usuario u2" 
+					." WHERE d.usuario = u2.id"
+					." AND d.usuario in"
+					." (SELECT u.id FROM ModelBundle:Usuario u WHERE u.admin = $id)"
+					." AND d.visto = false"
+					." ORDER BY d.fechahora DESC";
 
-				//Paginarlos
-				$page = $request->query->getInt('page', 1);
+				$query = $em->createQuery($dql);				
+
+				//Paginarlos				
+				/*$page = $request->query->getInt('page', 1);
 				$paginator = $this->get('knp_paginator');
 				$items_per_page = 10;
-				$pagination = $paginator->paginate($query, $page, $items_per_page);
-				$total_items_count = $pagination->getTotalItemCount();			
-		
-				$documentos = $query->getResult();		
-				
-				$then = new \Datetime("+15 minutes");				
+				$pagination = $paginator->paginate($query, $page, $items_per_page, array('distinct' => false));
+				$total_items_count = $pagination->getTotalItemCount();*/
 
-				if($documentos){	
+				if($query->getResult()){	
 					$data = array(
 						'status' => 'success',
 						'code' => 200,
 						'token' => $authCheck,                    
+						'data' => $query->getResult()/*
 						'total_items_count' => $total_items_count,
 						'page_actual' => $page,
 						'items_per_page' => $items_per_page,
 						'total_pages' => ceil($total_items_count / $items_per_page),
-						'data' => $pagination
+						'data' => $pagination*/
+						
 					);    
 				}else{
 					$data = array(
 						'status' => 'success',
 						'code' => 200,
-						'id' => $userid,
 						'token' => $authCheck,    
 						'data' => null,                
 						'message' => "No hay documentos"
@@ -449,6 +457,141 @@ class DocumentoController extends Controller {
 				);				
 			}
 
+		}
+
+		return $helpers->json($data);	
+	}	
+
+	public function listpruebaAction(Request $request) {
+		// Devuelve el listado de todos los documentos de un cliente
+		// La idea es que devuelva la descripción y los datos, no la ruta!!
+
+		// Si se pasa el usuario como parametro, se devolverán los documentos del usuario (descripción y datos, no ruta)
+		// Esto serviria para que los administradores pasen el id de un usario y recuperen sus documentos
+		// Si no se pasa, se recupera el usario del token
+		// Esta manera servirá para que los usuarios recuperen el listado de sus documentos
+		
+        $helpers = $this->get(Helpers::class);
+        $jwt_auth = $this->get(JwtAuth::class);
+
+        $token = $request->get('authorization', null);
+		$authCheck = $jwt_auth->checkToken($token);
+
+		$data = array(
+			'status' => 'error',
+			'code' => 405,
+			'msg' => 'Authorization not valid !!'
+		); 
+		
+        if($authCheck){		
+			$decode = $jwt_auth->decodeToken($token);
+			$identity = $jwt_auth->returnUser($decode->sub);												
+
+			if($decode->isadmin){				
+				//Buscar los documentos creados por el usuario indicado, ordenados por fecha
+				$em = $this->getDoctrine()->getManager();			
+
+				$id = $decode->sub;
+
+				$dql = "SELECT d.id, d.descripcion, d.fechahora, d.tipo, d.visto, u2.nombre as " 
+					." FROM ModelBundle:Documento d, ModelBundle:Usuario u2" 
+					." WHERE d.usuario = u2.id"					
+					." AND d.usuario in"					
+					." (SELECT u.id FROM ModelBundle:Usuario u WHERE u.admin = $id)"					
+					." AND d.visto = false"
+					." ORDER BY d.fechahora DESC";
+
+				$query = $em->createQuery($dql);																						
+
+				if($query->getResult()){	
+					$data = array(
+						'status' => 'success',
+						'code' => 200,
+						'token' => $authCheck,                    
+						'data' => $query->getResult()
+					);    
+				}else{
+					$data = array(
+						'status' => 'success',
+						'code' => 200,
+						'token' => $authCheck,    
+						'data' => null,                
+						'message' => "No hay documentos"
+					);    				
+				}				
+			}else{
+				$data = array(
+					'status' => 'error',
+					'code' => 400,
+					'msg' => 'User not admin !!'
+				);				
+			}
+
+		}
+
+		return $helpers->json($data);	
+	}		
+
+	public function cambiarestadoAction(Request $request) {		
+        $helpers = $this->get(Helpers::class);
+        $jwt_auth = $this->get(JwtAuth::class);
+
+        $token = $request->get('authorization', null);
+		$authCheck = $jwt_auth->checkToken($token);		
+
+		$data = array(
+			'status' => 'error',
+			'code' => 405,
+			'msg' => 'Authorization not valid !!'
+		);
+		
+        if($authCheck){		
+			$decode = $jwt_auth->decodeToken($authCheck);	
+			$id = $request->get('id', null);		
+			$nuevoestado = $request->get('estado', null);		
+
+			if($id && $nuevoestado != null && ($nuevoestado == true || $nuevoestado == false) ){
+				$em = $this->getDoctrine()->getManager();
+				$documento = $em->getRepository('ModelBundle:Documento')->find($id);
+
+				if($documento){
+					if($documento->getUsuario() == $decode->sub || $decode->isadmin){
+						$documento->setVisto($nuevoestado);
+						$em->persist($documento);
+						$em->flush();
+						$data = array(
+							'status' => 'success',
+							'code' => 200,
+							'token' => $authCheck,  
+							'nuevoestado' => $nuevoestado,                  
+							'data' => $documento,
+							'msg' => 'Documento actualizado'
+						);
+					}else{
+						$data = array(
+							'status' => 'error',
+							'code' => 400,
+							'token' => $authCheck,						
+							'msg' => 'User not authorized'
+						);
+					}
+				}else{
+					$data = array(
+						'status' => 'error',
+						'code' => 400,
+						'token' => $authCheck,						
+						'msg' => 'No existe el documento'
+					);
+				}				
+			}else{				
+				$data = array(
+					'status' => 'error',
+					'code' => 400,
+					'token' => $authCheck,
+					'data' => null,
+					'msg' => 'id or new status not provided !!'
+				); 				
+			}				
 		}
 
 		return $helpers->json($data);	

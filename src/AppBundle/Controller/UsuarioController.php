@@ -232,7 +232,6 @@ class UsuarioController extends Controller {
 					$data = array(
 						'status' => 'success',
 						'code' => 200,
-						'id' => $userid,
 						'token' => $authCheck,    
 						'data' => null,                
 						'message' => "No hay clientes de este administrador"

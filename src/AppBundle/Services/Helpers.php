@@ -8,6 +8,7 @@ use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Serializer\Normalizer\GetSetMethodNormalizer;
 use Symfony\Component\Serializer\Normalizer\PropertyNormalizer;
 use Symfony\Component\Serializer\Normalizer\JsonSerializableNormalizer;
+use Symfony\Component\HttpFoundation\Response;
  
 class Helpers
 {
@@ -47,6 +48,13 @@ class Helpers
 
 		return $response;
 
+	}
+
+	public function json2($data) 
+	{
+		$mandar = new Response(json_encode($data));
+        $mandar->headers->set('Content-Type', 'application/json');
+        return $mandar;	
 	}
 
 }

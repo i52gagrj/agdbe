@@ -63,33 +63,29 @@ class SesionController extends Controller {
 				//Buscar las sesiones iniciadas por el usuario indicado, ordenadas por fecha
 				$em = $this->getDoctrine()->getManager();			
 
-				$dql = "SELECT s FROM ModelBundle:Sesion s "
+				$dql = "SELECT s.id, s.inicio, s.fin FROM ModelBundle:Sesion s "
                 ."WHERE s.usuario = $userid "
 				."ORDER BY s.inicio DESC";
 
 				$query = $em->createQuery($dql);
 
 				//Paginarlos
-				$page = $request->query->getInt('page', 1);
+				/*$page = $request->query->getInt('page', 1);
 				$paginator = $this->get('knp_paginator');
 				$items_per_page = 10;
 				$pagination = $paginator->paginate($query, $page, $items_per_page);
-				$total_items_count = $pagination->getTotalItemCount();			
-		
-				$documentos = $query->getResult();		
-				
-				$then = new \Datetime("+15 minutes");				
-
-				if($documentos){	
+				$total_items_count = $pagination->getTotalItemCount();*/
+					
+				if($query->getResult()){	
 					$data = array(
 						'status' => 'success',
 						'code' => 200,
-						'token' => $authCheck,                    
+						'token' => $authCheck,/*
 						'total_items_count' => $total_items_count,
 						'page_actual' => $page,
 						'items_per_page' => $items_per_page,
-						'total_pages' => ceil($total_items_count / $items_per_page),
-						'data' => $pagination
+						'total_pages' => ceil($total_items_count / $items_per_page),*/
+						'data' => $query->getResult()
 					);    
 				}else{
 					$data = array(

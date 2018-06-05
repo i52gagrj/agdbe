@@ -21,4 +21,14 @@ documento_delete:
 documento_listnew:
     path: /listnew
     defaults: { _controller: "AppBundle:Documento:listnew" }
-    methods: POST     
+    methods: POST 
+
+documento_listprueba:
+    path: /listprueba
+    defaults: { _controller: "AppBundle:Documento:listprueba" }
+    methods: POST             
+
+documento_cambiarestado:
+    path: /cambiarestado
+    defaults: { _controller: "AppBundle:Documento:cambiarestado" }
+    methods: POST              
