@@ -14,20 +14,13 @@ use AppBundle\Services\JwtAuth;
 class SesionController extends Controller {
 
 	public function listallAction(Request $request) {
-		// Devuelve el listado de todos los documentos de un cliente
-		// La idea es que devuelva la descripción y los datos, no la ruta!!
-
-		// Si se pasa el usuario como parametro, se devolverán los documentos del usuario (descripción y datos, no ruta)
-		// Esto serviria para que los administradores pasen el id de un usario y recuperen sus documentos
-		// Si no se pasa, se recupera el usario del token
-		// Esta manera servirá para que los usuarios recuperen el listado de sus documentos
+		// Devuelve el listado de todas las sesiones de un cliente				
 		
         $helpers = $this->get(Helpers::class);
         $jwt_auth = $this->get(JwtAuth::class);
 
         $token = $request->get('authorization', null);
-		$authCheck = $jwt_auth->checkToken($token);
-		
+		$authCheck = $jwt_auth->checkToken($token);		
 
 		$data = array(
 			'status' => 'error',
@@ -36,8 +29,7 @@ class SesionController extends Controller {
 		); 
 		
         if($authCheck){		
-			$decode = $jwt_auth->decodeToken($token);
-			//$identity = $jwt_auth->returnUser($decode->sub);						
+			$decode = $jwt_auth->decodeToken($token);				
 			$id = $request->get('id', null);
 
 			if($id){
@@ -58,7 +50,6 @@ class SesionController extends Controller {
 				$userid = null;				
 			}
 				
-
 			if($userid){
 				//Buscar las sesiones iniciadas por el usuario indicado, ordenadas por fecha
 				$em = $this->getDoctrine()->getManager();			
@@ -68,23 +59,12 @@ class SesionController extends Controller {
 				."ORDER BY s.inicio DESC";
 
 				$query = $em->createQuery($dql);
-
-				//Paginarlos
-				/*$page = $request->query->getInt('page', 1);
-				$paginator = $this->get('knp_paginator');
-				$items_per_page = 10;
-				$pagination = $paginator->paginate($query, $page, $items_per_page);
-				$total_items_count = $pagination->getTotalItemCount();*/
 					
 				if($query->getResult()){	
 					$data = array(
 						'status' => 'success',
 						'code' => 200,
-						'token' => $authCheck,/*
-						'total_items_count' => $total_items_count,
-						'page_actual' => $page,
-						'items_per_page' => $items_per_page,
-						'total_pages' => ceil($total_items_count / $items_per_page),*/
+						'token' => $authCheck,
 						'data' => $query->getResult()
 					);    
 				}else{

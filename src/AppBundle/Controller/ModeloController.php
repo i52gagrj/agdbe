@@ -24,8 +24,7 @@ class ModeloController extends Controller {
 		$jwt_auth = $this->get(JwtAuth::class);
 
 		/* NOTA
-		Hay que añadir una condición para que solo puedan añadir modelos los usuarios clientes, y no lo puedan hacer los administradores
-		En el caso de modelos, será simetrico: solo podrán añadirlos los administradores, y no los clientes.
+		Hay que añadir una condición para que solo puedan añadir modelos los usuarios administradores, y no lo puedan hacer los clientes		
 		*/
 		
 		// Requerir autorización
@@ -176,24 +175,13 @@ class ModeloController extends Controller {
 				."AND m.usuario = u.id "
 				."ORDER BY m.fechahora ASC";
 
-				$query = $em->createQuery($dql);
-
-				//Paginarlos
-				/*$page = $request->query->getInt('page', 1);
-				$paginator = $this->get('knp_paginator');
-				$items_per_page = 10;
-				$pagination = $paginator->paginate($query, $page, $items_per_page);
-				$total_items_count = $pagination->getTotalItemCount();*/									
+				$query = $em->createQuery($dql);									
 
 				if($query->getResult()){	
 					$data = array(
 						'status' => 'success',
 						'code' => 200,
-						'token' => $authCheck,                    
-						/*'total_items_count' => $total_items_count,
-						'page_actual' => $page,
-						'items_per_page' => $items_per_page,
-						'total_pages' => ceil($total_items_count / $items_per_page),*/
+						'token' => $authCheck, 
 						'data' => $query->getResult()
 					);    
 				}else{
@@ -245,16 +233,19 @@ class ModeloController extends Controller {
 							'msg' => 'User not admin !!'
 						);
 					}else{
-						$file = new File($this->getParameter('directorio_modelos').'/'.$modelo->getRuta());	
 						
-						$descarga = new Descarga;
+						$file = new File($this->getParameter('directorio_modelos').'/'.$modelo->getRuta());	
+						if(!$decode->isadmin) {
+							$descarga = new Descarga;
 
-						$descarga->setFechahora(new \Datetime("now"));
-						$descarga->setUsuario($decode->sub);
-						$descarga->setModelo($id);
+							$descarga->setFechahora(new \Datetime("now"));
+							//Habria que eliminar el usuario: ya no se necesita
+							$descarga->setUsuario($decode->sub);
+							$descarga->setModelo($id);
 
-						$em->persist($descarga);
-						$em->flush();					
+							$em->persist($descarga);
+							$em->flush();			
+						}		
 					}	
 				}else{
 					$data = array(
@@ -284,6 +275,6 @@ class ModeloController extends Controller {
 		else{ 
 			return $helpers->json($data);
 		}	
-	}	
+	}			
 
 }	

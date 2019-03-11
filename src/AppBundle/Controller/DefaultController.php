@@ -8,6 +8,11 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Validator\Constraints as Assert;
+use ModelBundle\Entity\Usuario;
+use ModelBundle\Entity\Modelo;
+use ModelBundle\Entity\Descarga;
+use ModelBundle\Entity\Sesion;
+use ModelBundle\Entity\Mensaje;
 use AppBundle\Services\Helpers;
 use AppBundle\Services\JwtAuth;
 
@@ -28,7 +33,8 @@ class DefaultController extends Controller
         $json = $request->get('json', null);
         $data = array(
             'status' => 'error',
-            'data' => 'Send json via post!!!'
+            'code' => 401,
+            'message' => 'Send json via post!!!'
         );
         if($json != null)
         {
@@ -37,8 +43,7 @@ class DefaultController extends Controller
             $params = json_decode($json);
             //Recoger los datos
             $email = (isset($params->email)) ? $params->email : null;
-            $password = (isset($params->password)) ? $params->password : null;
-            //$getHash = (isset($params->getHash)) ? $params->getHash : null;
+            $password = (isset($params->password)) ? $params->password : null;            
             $emailConstraint = new Assert\Email();
             $emailConstraint->message = "This email is not valid !!";
             $validate_email = $this->get("validator")->validate($email, $emailConstraint);
@@ -48,31 +53,15 @@ class DefaultController extends Controller
                 $jwt_auth = $this->get(JwtAuth::class);
                 $pwd=hash('sha256',$password);
                 $signup = $jwt_auth ->signup($email, $pwd);
-                return $this->json($signup);
-                /*$identity = $jwt_auth->decodeToken($signup);
-                $user = $jwt_auth->returnUser($identity->sub);
-                if($identity && $user){
-                    $data = array(
-                        'status' => 'success',
-                        'data' => 'Email correct',                    
-                        'token' => $signup,
-                        'user' => $user
-                    );                 
-                }
-                else{
-                    $data = array(
-                        'status' => 'error',
-                        'data' => 'Error on signup or user',                    
-                        'token' => $signup,
-                        'user' => $user
-                    );                    
-                }*/
+                //return $this->json($signup);
+                return $helpers->json($signup);
             }
             else
             {
                 $data = array(
                     'status' => 'error',
-                    'data' => 'Email incorrect'
+                    'code' => 402,
+                    'message' => 'Email incorrect'
                 ); 
             }        
         }
@@ -81,14 +70,13 @@ class DefaultController extends Controller
 
     public function returnidentityAction(Request $request) {
         // Solo como prueba. Borrar en versión final
-        $helpers = $this->get(Helpers::class);
-        // Recibir json por POST
+        $helpers = $this->get(Helpers::class);        
         $json = $request->get("token", null);
 
         $data = array(
             'status' => 'error',
             'code' => 400,
-            'data' => 'Json Incorrect'
+            'message' => 'Json Incorrect'
         );
 
         if($json != null)
@@ -99,12 +87,7 @@ class DefaultController extends Controller
             $identity = $jwt_auth->decodeToken($petition);    
 
             $data = $identity;
-            
-            /*$data = array(
-                'status' => 'success',
-                'code' => 200,
-                'data' => $identity
-            );*/            
+          
         }
      
         $mandar = new Response(json_encode($data));
@@ -114,8 +97,7 @@ class DefaultController extends Controller
         //return $helpers->json($data);                            
     }
 
-    public function logoutAction(Request $request) {
-        // Solo como prueba. Borrar en versión final
+    public function logoutAction(Request $request) {        
         $helpers = $this->get(Helpers::class);
         $jwt_auth = $this->get(JwtAuth::class);        
 
@@ -125,7 +107,7 @@ class DefaultController extends Controller
 		$data = array(
 			'status' => 'success',
 			'code' => 200,
-			'msg' => 'Session ended'
+			'message' => 'Session ended'
 		); 
 		
         if($authCheck){		
@@ -135,45 +117,178 @@ class DefaultController extends Controller
             $data = array(
                 'status' => 'error',
                 'code' => 400,
-                'msg' => 'Authorization not valid'
+                'message' => 'Authorization not valid'
             );             
         }
 
 		return $helpers->json($data);		
     }
 
-    public function pruebasAction(Request $request) {
-        // Solo como prueba. Borrar en versión final
-        $token = $request->get("authorization", null);
+    public function returninfoclientAction(Request $request) {
         $helpers = $this->get(Helpers::class);
         $jwt_auth = $this->get(JwtAuth::class);
-        $newtoken = $jwt_auth->checkToken($token);
-        if($token && $newtoken){                
-            $datos = $jwt_auth->decodeToken($token);   
-            $usuario = $jwt_auth->returnUser($datos->sub);        
+
+        $token = $request->get('authorization', null);
+		$authCheck = $jwt_auth->checkToken($token);
+		
+
+		$data = array(
+			'status' => 'error',
+			'code' => 405,
+			'msg' => 'Authorization not valid'
+		); 
+		
+        if($authCheck){		
+			$decode = $jwt_auth->decodeToken($token);									
+			$userid = $decode->sub;	
+            $isadmin = $decode->isadmin;		
+
+            $data = array(
+                'status' => 'error',
+                'code' => 407,
+                'msg' => 'User is admin',
+                'isadmin' => $isadmin
+            );             
+
+			if($userid and $isadmin==false){				
+				$em = $this->getDoctrine()->getManager();			
+
+				$dql = "SELECT count (m.id) "
+				."FROM ModelBundle:Modelo m, ModelBundle:Usuario u "
+				."WHERE m.usuario = {$userid} "
+				."AND m.usuario = u.id "
+				."ORDER BY m.fechahora ASC";				
+
+                $query = $em->createQuery($dql);
                 
-            //echo $datos->sub;
-            //die();            
+                if($query->getResult()){
+                    $models = $query->getResult()[0];
+                }else{
+                    $models = 0;
+                }
+                
+				$dql = "SELECT count (d.id) "
+				."FROM ModelBundle:Documento d "
+				."WHERE d.usuario = {$userid} "
+				."ORDER BY d.fechahora DESC";				
 
-            $json = array(
-                'status' => 'success', 
-                'users' => $usuario/*,
-                'token' => $newtoken*/
-            );
-        }
-        else 
-        {
-            $json = array(
-                'status' => 'error', 
-                'code' => 400,
-                'users' => 'Authorization not valid'
-            );    
-        }        
-        
-        /*$mandar = new Response(json_encode($json));
-        $mandar->headers->set('Content-Type', 'application/json');
-        return $mandar;*/
+                $query = $em->createQuery($dql);             
 
-        return $helpers->json($json);
+                if($query->getResult()){
+                    $documents = $query->getResult()[0];
+                }else{
+                    $documents = 0;
+                }
+                
+				$dql = "SELECT count (m.id) "
+				."FROM ModelBundle:Mensaje m, ModelBundle:Usuario u1, ModelBundle:Usuario u2 "
+				."WHERE (m.emisor = $userid OR m.receptor = $userid) "
+				."AND m.emisor = u1.id and m.receptor = u2.id "
+				."ORDER BY m.fechahora DESC";				
+
+                $query = $em->createQuery($dql);                            
+
+                if($query->getResult()){
+                    $messages = $query->getResult()[0];
+                }else{
+                    $messages = 0;
+                }
+				
+                $data = array(
+					'status' => 'success',
+					'code' => 200,
+					'token' => $authCheck, 
+                    'models' => $models,
+                    'documents' => $documents,
+                    'messages' => $messages
+				);    
+			}		
+
+		}
+
+		return $helpers->json($data);	
+    }
+
+    public function returninfoadminAction(Request $request) {
+        $helpers = $this->get(Helpers::class);
+        $jwt_auth = $this->get(JwtAuth::class);
+
+        $token = $request->get('authorization', null);
+		$authCheck = $jwt_auth->checkToken($token);
+		
+
+		$data = array(
+			'status' => 'error',
+			'code' => 405,
+			'msg' => 'Authorization not valid'
+		); 
+		
+        if($authCheck){		
+			$decode = $jwt_auth->decodeToken($token);
+			//$identity = $jwt_auth->returnUser($decode->sub);						
+			$userid = $decode->sub;	
+            $isadmin = $decode->isadmin;		
+
+            $data = array(
+                'status' => 'error',
+                'code' => 407,
+                'msg' => 'User is client'
+            );             
+
+			if($userid and $isadmin){				
+				$em = $this->getDoctrine()->getManager();			
+
+				$dql = $dql = "SELECT count (u.id) FROM ModelBundle:Usuario u WHERE u.admin = {$userid}";								
+
+                $query = $em->createQuery($dql);
+                
+                if($query->getResult()){
+                    $clients = $query->getResult()[0];
+                }else{
+                    $clients = 0;
+                }
+                
+				$dql = "SELECT count (d.id) "
+				    ." FROM ModelBundle:Documento d, ModelBundle:Usuario u2" 
+					." WHERE d.usuario = u2.id"
+					." AND d.usuario in"
+					." (SELECT u.id FROM ModelBundle:Usuario u WHERE u.admin = {$userid} )"
+					." AND d.visto = false"
+					." ORDER BY d.fechahora DESC";				
+
+                $query = $em->createQuery($dql);             
+
+                if($query->getResult()){
+                    $documents = $query->getResult()[0];
+                }else{
+                    $documents = 0;
+                }
+                
+				$dql = "SELECT count (m.id) "
+				    ."FROM ModelBundle:Mensaje m, ModelBundle:Usuario u "
+                	."WHERE m.receptor = {$userid} AND m.visto = false AND m.emisor = u.id "
+					."ORDER BY m.fechahora DESC";				
+
+                $query = $em->createQuery($dql);                            
+
+                if($query->getResult()){
+                    $messages = $query->getResult()[0];
+                }else{
+                    $messages = 0;
+                }
+				
+                $data = array(
+					'status' => 'success',
+					'code' => 200,
+					'token' => $authCheck, 
+                    'clients' => $clients,
+                    'documents' => $documents,
+                    'messages' => $messages
+				);    
+			}		
+
+		}
+
+		return $helpers->json($data);	
     }
 }

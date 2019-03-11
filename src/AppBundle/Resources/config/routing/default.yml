@@ -22,3 +22,13 @@ default_returnidentity:
     path: /returnidentity 
     defaults: { _controller: "AppBundle:Default:returnidentity" }
     methods: POST    
+
+default_returninfoclient:
+    path: /returninfoclient
+    defaults: { _controller: "AppBundle:Default:returninfoclient" }
+    methods: POST     
+
+default_returninfoadmin:
+    path: /returninfoadmin
+    defaults: { _controller: "AppBundle:Default:returninfoadmin" }
+    methods: POST      

@@ -28,8 +28,6 @@ class DocumentoController extends Controller {
 		//En el caso de modelos, será simetrico: solo podrán añadirlos los administradores, y no los clientes.		
 		
 		// Requerir autorización
-
-
         $token = $request->get('authorization');
         $authCheck = $jwt_auth->checkToken($token);
 
@@ -38,7 +36,7 @@ class DocumentoController extends Controller {
             'code' => 405,
 			'msg' => 'Authorization not valid !!',
 			'token' => $token
-        );         
+		);         				
 
         if($authCheck)
         {        			
@@ -46,66 +44,76 @@ class DocumentoController extends Controller {
 			$decoded = $jwt_auth->decodeToken($token);
 			$identity = $jwt_auth->returnUser($decoded->sub);
 
-			// Requerir los datos json enviados
-	        $json = $request->get('json', null);
-			$params = json_decode($json);
+			if(!$identity->getIsadmin()){	
+				// Requerir los datos json enviados
+				$json = $request->get('json', null);
+				$params = json_decode($json);
 
-			// Requerir fichero
-			$uploadedFichero = $request->files->get('file');			
-			
-			if($uploadedFichero)
-			{														
-				/**
-				  * @var UploadedFile $fichero;
-				  */ 				
-				$fichero = $uploadedFichero;
-				if($fichero!=""){
-					$tipo = $fichero->guessExtension();
-					$nombrefichero=md5(uniqid()).'.'.$tipo;
-					$fichero->move($this->getParameter('directorio_documentos'),$nombrefichero);
+				// Requerir fichero
+				$uploadedFichero = $request->files->get('file');			
 				
-					$documento = new Documento();
-					$documento->setRuta($nombrefichero);
-					$documento->setDescripcion($params->descripcion);
-					$documento->setTipo($tipo);				
-					$documento->setFechahora(new \Datetime("now"));
-					$documento->setUsuario($identity->getId());    
-					$documento->setVisto(false);  
+				if($uploadedFichero)
+				{														
+					/**
+					 * @var UploadedFile $fichero;
+					*/ 				
+					$fichero = $uploadedFichero;
+					if($fichero!=""){
+						$tipo = $fichero->guessExtension();
+						$nombrefichero=md5(uniqid()).'.'.$tipo;
+						$fichero->move($this->getParameter('directorio_documentos'),$nombrefichero);
+					
+						$documento = new Documento();
+						$documento->setRuta($nombrefichero);
+						$documento->setDescripcion($params->descripcion);
+						$documento->setTipo($tipo);				
+						$documento->setFechahora(new \Datetime("now"));
+						$documento->setUsuario($identity->getId());    
+						$documento->setVisto(false);  
 
-					$em = $this->getDoctrine()->getManager();
-					$em->persist($documento);
-					$em->flush();   
-					
-					$datosdocumento = array(
-						'Id' => $documento->getId(),
-						'Descripcion' => $documento->getDescripcion(),					
-						'Tipo' => $documento->getTipo()
-					);
-					
-					$data = array(
-						'status' => 'success',
-						'code' => 200, 					
-						'token' => $authCheck,
-						'msg' => 'New Document created!!',
-						'documento' => $documento
-					);   
-				}else{
+						$em = $this->getDoctrine()->getManager();
+						$em->persist($documento);
+						$em->flush();   
+						
+						$datosdocumento = array(
+							'Id' => $documento->getId(),
+							'Descripcion' => $documento->getDescripcion(),					
+							'Tipo' => $documento->getTipo()
+						);
+						
+						$data = array(
+							'status' => 'success',
+							'code' => 200, 					
+							'token' => $authCheck,
+							'msg' => 'New Document created!!',
+							'documento' => $documento
+						);   
+					}else{
+						$data = array(
+							'status' => 'error',
+							'code' => 400,
+							'token' => $authCheck,
+							'msg' => 'File too big',
+							'token' => $token
+						);  					
+					}
+				}
+				else{
 					$data = array(
 						'status' => 'error',
 						'code' => 400,
 						'token' => $authCheck,
-						'msg' => 'File too big',
+						'msg' => 'File not send',
 						'token' => $token
-					);  					
+					); 				
 				}
-			}
-			else
-			{
+			}	
+			else{
 				$data = array(
 					'status' => 'error',
-					'code' => 400,
+					'code' => 410,
 					'token' => $authCheck,
-					'msg' => 'File not send',
+					'msg' => 'User is admin',
 					'token' => $token
 				); 				
 			}
@@ -173,13 +181,6 @@ class DocumentoController extends Controller {
 				."ORDER BY d.fechahora DESC";
 
 				$query = $em->createQuery($dql);
-
-				//Paginarlos
-				/*$page = $request->query->getInt('page', 1);
-				$paginator = $this->get('knp_paginator');
-				$items_per_page = 10;
-				$pagination = $paginator->paginate($query, $page, $items_per_page);
-				$total_items_count = $pagination->getTotalItemCount();*/
 		
 				$documentos = $query->getResult();						
 
@@ -188,10 +189,6 @@ class DocumentoController extends Controller {
 						'status' => 'success',
 						'code' => 200,
 						'token' => $authCheck,                    
-						/*'total_items_count' => $total_items_count,
-						'page_actual' => $page,
-						'items_per_page' => $items_per_page,
-						'total_pages' => ceil($total_items_count / $items_per_page),*/
 						'data' => $documentos
 					);    
 				}else{
@@ -252,24 +249,17 @@ class DocumentoController extends Controller {
 				$em = $this->getDoctrine()->getManager();			
 					
 				$documento = $em->getRepository('ModelBundle:Documento')->find($id);
+				$usuario = $jwt_auth->returnUser($documento->getUsuario());
 
 				if($documento){
-					if($decode->sub != $documento->getUsuario() && !$decode->isadmin){
+					if($decode->sub != $documento->getUsuario() && (!$decode->isadmin || ($decode->isadmin && $usuario->getAdmin() != $decode->sub))){
 						$data = array(
 							'status' => 'error',
 							'code' => 400,
-							'msg' => 'User not admin !!'
+							'msg' => 'User not owner or not admin of owner !!'
 						);
-					}else{
-						$file = new File($this->getParameter('directorio_documentos').'/'.$documento->getRuta());						
-						$data = array(
-							'status' => 'success',
-							'code' => 200,
-							'id' => $id,
-							'token' => $authCheck,
-							'file' => $file
-						);   	
-						//$data = $helpers->json($data2);						
+					}else{						
+						$file = new File($this->getParameter('directorio_documentos').'/'.$documento->getRuta());												   	
 					}	
 				}else{
 					$data = array(
@@ -291,9 +281,6 @@ class DocumentoController extends Controller {
 		}
 				
 		if($file){ 
-			//$mandar = new Response($data);
-			//$mandar->headers->set('Content-Type', 'multipart/form-data');
-			//return $mandar;
 			return $this->file($file);
 		}
 		else{ 
@@ -373,7 +360,7 @@ class DocumentoController extends Controller {
 
 	
 	public function listnewAction(Request $request) {
-		// Devuelve el listado de todos los documentos de un cliente
+		// Devuelve el listado de todos los documentos de usuarios de un administrador que aun no han sido descargados
 		// La idea es que devuelva la descripción y los datos, no la ruta!!
 
 		// Si se pasa el usuario como parametro, se devolverán los documentos del usuario (descripción y datos, no ruta)
@@ -399,9 +386,8 @@ class DocumentoController extends Controller {
 			//$id = $request->get('id', null);
 
 			if($decode->isadmin){				
-				//Buscar los documentos creados por el usuario indicado, ordenados por fecha
+				//Buscar los documentos creados por usuarios del admnistrador al que pertenece el token
 				$em = $this->getDoctrine()->getManager();			
-
 				$id = $decode->sub;
 
 				/*$dql = "SELECT d.id, d.descripcion, d.tipo, d.usuario, d.fechahora, d.visto " 
@@ -419,13 +405,6 @@ class DocumentoController extends Controller {
 					." ORDER BY d.fechahora DESC";
 
 				$query = $em->createQuery($dql);				
-
-				//Paginarlos				
-				/*$page = $request->query->getInt('page', 1);
-				$paginator = $this->get('knp_paginator');
-				$items_per_page = 10;
-				$pagination = $paginator->paginate($query, $page, $items_per_page, array('distinct' => false));
-				$total_items_count = $pagination->getTotalItemCount();*/
 
 				if($query->getResult()){	
 					$data = array(

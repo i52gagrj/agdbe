@@ -16,14 +16,14 @@ class JwtAuth
 	}
 
 	public function signup($email, $password)
+	// Esta función realiza la autenticación del correo y la clave pasados por el usuario
 	{
 		$user = $this->manager->getRepository('ModelBundle:Usuario')->findOneBy(array(
 			"email" => $email,
 			"password" => $password
 		));
 
-		$signup = false;
-		//$ultimotiempo = time();
+		$signup = false;		
 		$now = new \Datetime();
 
 		if(is_object($user)) $signup = true;
@@ -31,7 +31,8 @@ class JwtAuth
 
 		if($signup)
 		{
-			//Leer las sesiones del usuario
+			// Leer las sesiones del usuario. Si la última tiene un timestamp de fin mayor que la hora actual, 
+			// el usuario aún está conectado.
 			$uid = $user->getId();
 
 			$dql = "SELECT s FROM ModelBundle:Sesion s "
@@ -44,22 +45,23 @@ class JwtAuth
 			if(empty($vacio)){
 				$query = null;
 			}
-			
+
+			// Si ya está conectado el usuario, se crea el array con el código 404
 			$data = array(
 				'status' => 'error',
-				'message' => 'Login failed!',
-				'query' => $query,
-				'vacio' => $vacio,
-				'vacio2' => empty($vacio)
+				'message' => 'Login failed, user already connected!',
+				//'query' => $query,
+				//'vacio' => $vacio,
+				//'vacio2' => empty($vacio),
+				'code' => 404
 			);			
 			if($query){
 				$ultimotiempo = $query->getResult()[0]->getFin();
 			}
 
 			if((isset($query) && $ultimotiempo < $now) || (!isset($query))){
-				//Generar sesion 						
+				//Generar y almacenar sesion 						
 				$sesionid=0;
-
 				$sesion = new Sesion;
 				$sesion->setInicio(new \Datetime("now"));
 				$sesion->setFin(new \Datetime("+15 minutes"));
@@ -71,7 +73,6 @@ class JwtAuth
 				$sesionid = $sesion->getId();
 
 				//GENERAR TOKEN JWT
-
 				$token = array(
 					"sub" => $user->getId(),
 					"email" => $user->getEmail(),
@@ -85,16 +86,19 @@ class JwtAuth
 
 				$jwt = JWT::encode($token, $this->key, 'HS256');
 
+				// Enviar token JWT
 				$data = $jwt;			
 			}				
 
 		}
 		else 
 		{
+			// Si hay un error en el email o en la clave, se envia el siguiente array	
 			$data = array(
 				'status' => 'error',
-				'message' => 'Login failed!',
-				'user' => $user
+				'message' => 'Login failed, email or password incorrect!',
+				'code' => 403/*,
+				'user' => $user*/
 			);
 		}
 

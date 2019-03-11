@@ -150,7 +150,7 @@ class MensajeController extends Controller {
 			}
 				
 			if($userid){
-				//Buscar los documentos creados por el usuario indicado, ordenados por fecha
+				//Buscar los mensajes pertenecientes al usuario indicado, ordenados por fecha
 				$em = $this->getDoctrine()->getManager();			
 
 				$dql = "SELECT m.id, m.texto, m.fechahora, m.visto, u1.nombre as emisor, u2.nombre as receptor "

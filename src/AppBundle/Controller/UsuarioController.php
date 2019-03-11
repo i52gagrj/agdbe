@@ -12,7 +12,13 @@ use AppBundle\Services\Helpers;
 use AppBundle\Services\JwtAuth;
 
 class UsuarioController extends Controller {
-
+   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+   // FUNCIÓN listallAction(Request $request)
+   // OBJETIVO
+   // ENTRADA
+   // SALIDA
+   //
+   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	public function newAction(Request $request) {
         //Modificar. Que solo puedan usarlo los administradores, y que solo pueda crear 
         // usuarios clientes de esos administradores
@@ -106,7 +112,13 @@ class UsuarioController extends Controller {
         return $helpers->json($data);
 	}
 
-
+   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+   // FUNCIÓN listallAction(Request $request)
+   // OBJETIVO
+   // ENTRADA
+   // SALIDA
+   //
+   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     public function editAction(Request $request) 
     {
         $helpers = $this->get(Helpers::class);
@@ -178,6 +190,13 @@ class UsuarioController extends Controller {
         return $helpers->json($data);
     }
 
+   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+   // FUNCIÓN listallAction(Request $request)
+   // OBJETIVO
+   // ENTRADA
+   // SALIDA
+   //
+   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////    
     public function returnallclientsAction(Request $request) 
     {
         // Devuelve todos los clientes de un administrador dado       
@@ -203,30 +222,15 @@ class UsuarioController extends Controller {
 				$em = $this->getDoctrine()->getManager();			
 
 				$dql = "SELECT u FROM ModelBundle:Usuario u WHERE u.admin = {$decode->sub}";
+				$query = $em->createQuery($dql);		
+				$usuarios = $query->getResult();													
 
-				$query = $em->createQuery($dql);
-
-				//Paginarlos
-				$page = $request->query->getInt('page', 1);
-				$paginator = $this->get('knp_paginator');
-				$items_per_page = 10;
-				$pagination = $paginator->paginate($query, $page, $items_per_page);
-				$total_items_count = $pagination->getTotalItemCount();			
-		
-				$documentos = $query->getResult();		
-				
-				$then = new \Datetime("+15 minutes");				
-
-				if($documentos){	
+				if($usuarios){	
 					$data = array(
 						'status' => 'success',
 						'code' => 200,
 						'token' => $authCheck,                    
-						'total_items_count' => $total_items_count,
-						'page_actual' => $page,
-						'items_per_page' => $items_per_page,
-						'total_pages' => ceil($total_items_count / $items_per_page),
-						'data' => $pagination
+						'data' => $usuarios
 					);    
 				}else{
 					$data = array(
@@ -250,66 +254,4 @@ class UsuarioController extends Controller {
 
 		return $helpers->json($data);
     }
-
-    public function returnoneclientAction(Request $request) 
-    {
-        // Devuelve un cliente dada su id
-        /*
-
-        $helpers = $this->get(Helpers::class);
-        $jwt_auth = $this->get(JwtAuth::class);
-
-        $token = $request->get('authorization', null);
-
-        $authCheck = $jwt_auth->checkToken($token);
-
-        $data = array(
-            'status' => 'error',
-            'code' => 400,
-            'msg' => 'Document not created !!'
-        );         
-
-        if($authCheck)
-        {   
-            $id=$request->get('iddocumento', null);
-            $em = $this->getDoctrine()->getManager();
-            $documento = $em->getRepository('ModelBundle:Documento')->find($id);
-
-            if($documento) {
-                $data = array(
-                    'status' => 'Success',
-                    'code' => 200,
-                    'msg' => 'Document recovered !!', 
-                    'authcheck' => $authCheck,
-                    'documento' => $documento
-                );                  
-            }
-
-            else {
-                $data = array(
-                    'status' => 'error',
-                    'code' => 400,
-                    'msg' => 'Document not exist !!', 
-                    'authcheck' => $authCheck
-                );                                  
-            }                           
-        }               
-        
-        else
-        {
-            $data = array(
-                'status' => 'error',
-                'code' => 400,
-                'msg' => 'Authorization not valid'
-            );         
-        }   
-
-        return $helpers->json($data);
-
-        */
-
-        echo "Hola mundo desde el controlador de listar un cliente";
-        die();      
-    }    
-
 }
